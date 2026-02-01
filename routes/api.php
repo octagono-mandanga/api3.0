@@ -33,8 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
     Route::get('ping', function() { return response()->json(['status' => 'root-ok']); });
-    
-    // Roles por Institución (MOVIDO ARRIBA)
+        
     Route::get('institution-roles', [InstitutionRoleController::class, 'index']);
     Route::post('institution-roles', [InstitutionRoleController::class, 'store']);
     Route::delete('institution-roles/{id}', [InstitutionRoleController::class, 'destroy']);
@@ -47,7 +46,7 @@ Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
     // Educational Structure
     Route::apiResource('educational-levels', EducationalLevelController::class);
     Route::get('institution-levels', [EducationalLevelController::class, 'getInstitutionLevels']);
-    Route::post('institution-levels/sync', [EducationalLevelController::class, 'syncInstitutionLevel']);
+    Route::post('institution-levels/sync', [EducationalLevelController::class, 'syncInstitutionLevel']); 
 
     Route::apiResource('grades', GradeController::class);
     Route::get('institution-grades', [GradeController::class, 'getInstitutionGrades']);
