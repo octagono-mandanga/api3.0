@@ -14,13 +14,14 @@ class InstitutionRoleController extends Controller
     /**
      * Display a listing of roles for a specific institution with their status.
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, $institutionId = null): JsonResponse
     {
-        $request->validate([
-            'institution_id' => 'required|uuid|exists:auth.institutions,id'
-        ]);
+        // Priorizar el ID de la ruta, luego el del query string
+        $institutionId = $institutionId ?? $request->query('institution_id');
 
-        $institutionId = $request->institution_id;
+        if (!$institutionId) {
+            return response()->json(['error' => 'El ID de la institución es requerido.'], 400);
+        }
 
         // Traer todos los roles y adjuntar el estado de la institución seleccionada
         $roles = Role::leftJoin('auth.institution_roles', function ($join) use ($institutionId) {
