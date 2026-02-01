@@ -21,7 +21,7 @@ jobs:
           script: |
             cd /var/www/mandanga-platform
             
-            # Diagnóstico: ¿Dónde estamos y qué tenemos?
+            # Diagnóstico: ¿Dónde estamos y qué tenemos? 
             echo "Directorio actual: $(pwd)"
             echo "Antes del deploy, el último commit era:"
             git log -1 --format="%s" || echo "No se pudo leer el log"
