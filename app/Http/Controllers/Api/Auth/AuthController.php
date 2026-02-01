@@ -54,7 +54,7 @@ class AuthController extends Controller
 	            ]);
 
 	        } catch (\Exception $e) {
-	            // Esto evita que la conexión se cierre y te da el error real en PowerShell
+	            // Esto evita que la conexión se cierre
 	            return response()->json([
 	                'error' => 'Error Fatal en el Servidor',
 	                'details' => $e->getMessage()
@@ -125,7 +125,7 @@ public function userContext(Request $request)
 }
 
 /**
- * Lógica simple para ayudar a Angular a decidir la ruta inicial
+ * Lógica simple para ayudar a Angular a decidir la ruta inicial 
  */
 private function calculateRedirect(?string $slug): string
 {
