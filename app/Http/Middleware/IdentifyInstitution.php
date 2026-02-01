@@ -16,7 +16,7 @@ class IdentifyInstitution
 
         // 2. Buscar en la tabla auth.institutions
         $institution = Institution::where('website_url', $host)
-            ->where('is_active', true)
+            ->where('status', 'ACTIVE')
             ->first();
 
         // 3. Validar si existe (Silencioso para permitir Root)

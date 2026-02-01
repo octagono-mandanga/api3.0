@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Root\FormationAreaController;
 use App\Http\Controllers\Api\Root\AcademicYearController;
 
 //Route::post('/login', [AuthController::class, 'login'])->middleware(IdentifyInstitution::class);
+Route::get('/ping', function() { return response()->json(['status' => 'ok', 'time' => now()]); });
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -31,11 +32,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
+    Route::get('ping', function() { return response()->json(['status' => 'root-ok']); });
+    
+    // Roles por Institución (MOVIDO ARRIBA)
+    Route::get('institution-roles', [InstitutionRoleController::class, 'index']);
+    Route::post('institution-roles', [InstitutionRoleController::class, 'store']);
+    Route::delete('institution-roles/{id}', [InstitutionRoleController::class, 'destroy']);
+
     Route::post('institutions/upload-logo', [InstitutionController::class, 'uploadLogo']);
     Route::apiResource('institutions', InstitutionController::class);
     Route::apiResource('campuses', CampusController::class);
     Route::get('roles', [RoleController::class, 'index']);
-    Route::apiResource('institution-roles', InstitutionRoleController::class);
     
     // Educational Structure
     Route::apiResource('educational-levels', EducationalLevelController::class);

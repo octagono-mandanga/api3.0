@@ -24,8 +24,8 @@ class InstitutionRoleController extends Controller
 
         // Traer todos los roles y adjuntar el estado de la institución seleccionada
         $roles = Role::leftJoin('auth.institution_roles', function ($join) use ($institutionId) {
-            $join->on('roles.id', '=', 'institution_roles.role_id')
-                 ->where('institution_roles.institution_id', '=', $institutionId);
+            $join->on('auth.roles.id', '=', 'auth.institution_roles.role_id')
+                 ->where('auth.institution_roles.institution_id', '=', $institutionId);
         })
         ->select(
             'auth.roles.*',
