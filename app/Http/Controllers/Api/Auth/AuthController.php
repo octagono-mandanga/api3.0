@@ -53,8 +53,7 @@ class AuthController extends Controller
 	                ]
 	            ]);
 
-	        } catch (\Exception $e) {
-	            // Esto evita que la conexión se cierre
+	        } catch (\Exception $e) {	            
 	            return response()->json([
 	                'error' => 'Error Fatal en el Servidor',
 	                'details' => $e->getMessage()

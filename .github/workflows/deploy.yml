@@ -20,30 +20,24 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /var/www/mandanga-platform
-            
-            # Diagnóstico: ¿Dónde estamos y qué tenemos? 
-            echo "Directorio actual: $(pwd)"
-            echo "Antes del deploy, el último commit era:"
-            git log -1 --format="%s" || echo "No se pudo leer el log"
-            
-            # 1. Configuración de seguridad
-            git config --global --add safe.directory /var/www/mandanga-platform
-            
-            # 2. Sincronización FORZADA (Esto soluciona que no veas los cambios)
-            git fetch origin main
-            git reset --hard origin/main
-            git clean -fd
-            
-            echo "Después del reset, el commit es:"
+            echo "Estoy en: $(pwd)"
+            echo "Último commit en esta carpeta:"
             git log -1 --format="%s"
             
-            # 3. Dependencias
+            # 1. Marcar directorio como seguro para el usuario mandanga3
+            git config --global --add safe.directory /var/www/mandanga-platform
+            
+            # 2. Bajar cambios de GitHub (Lógica actualizada)
+            git pull origin main
+            
+            # 3. Instalar dependencias de PHP (Sin tocar la DB ni el .env)
             composer install --no-interaction --prefer-dist --optimize-autoloader
             
-            # 4. Caché de Laravel
+            # 4. Limpieza y Optimización de caché
+            # Quitamos 'migrate' para que no toque la estructura de Postgres
             php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
             
-            echo "¡Deploy finalizado con éxito por mandanga3!"
+            echo "¡Deploy de Mandanga (Lógica) finalizado con éxito por mandanga3!"
