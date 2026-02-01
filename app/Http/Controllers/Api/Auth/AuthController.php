@@ -21,11 +21,11 @@ class AuthController extends Controller
 	            $user = User::where('email', $credentials['email'])
 //	                        ->where('global_status', 'ACTIVE')
 	                        ->first();
-/*
+
 	            if (!$user || !Hash::check($credentials['password'], $user->password_hash)) {
 	                return response()->json(['message' => 'Credenciales inválidas'], 401);
 	            }
-
+/*
 	            // 2. Validar Institución (vía Middleware)
 	            $institution = config('app.current_institution');
 	            if (!$institution) {

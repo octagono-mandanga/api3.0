@@ -1,0 +1,40 @@
+name: Deploy Mandanga Platform
+
+on:
+  push:
+    branches: [ main ] # Se ejecuta cuando subes cambios a la rama main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Desplegar en VPS vía SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }} # IMPORTANTE: Asegúrate de que en GitHub Secret sea 'mandanga3'
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /var/www/mandanga-platform
+            
+            # 1. Marcar directorio como seguro para el usuario mandanga3
+            git config --global --add safe.directory /var/www/mandanga-platform
+            
+            # 2. Bajar cambios de GitHub (Lógica actualizada)
+            git pull origin main
+            
+            # 3. Instalar dependencias de PHP (Sin tocar la DB ni el .env)
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+            
+            # 4. Limpieza y Optimización de caché
+            # Quitamos 'migrate' para que no toque la estructura de Postgres
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            
+            echo "¡Deploy de Mandanga (Lógica) finalizado con éxito por mandanga3!"
