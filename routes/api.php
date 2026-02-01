@@ -19,6 +19,13 @@ use App\Http\Controllers\Api\Root\AcademicYearController;
 
 //Route::post('/login', [AuthController::class, 'login'])->middleware(IdentifyInstitution::class);
 Route::get('/ping', function() { return response()->json(['status' => 'ok', 'time' => now()]); });
+
+// TEMPORAL: Limpiar caché de rutas (ELIMINAR EN PRODUCCIÓN)
+Route::get('/clear-route-cache', function() {
+    \Illuminate\Support\Facades\Artisan::call('route:clear');
+    return response()->json(['message' => 'Route cache cleared!', 'output' => \Illuminate\Support\Facades\Artisan::output()]);
+});
+
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
