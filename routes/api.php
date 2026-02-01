@@ -10,6 +10,12 @@ use App\Http\Controllers\Api\ProfileController;
 //Root
 use App\Http\Controllers\Api\Root\InstitutionController;
 use App\Http\Controllers\Api\Root\CampusController;
+use App\Http\Controllers\Api\Root\RoleController;
+use App\Http\Controllers\Api\Root\InstitutionRoleController;
+use App\Http\Controllers\Api\Root\EducationalLevelController;
+use App\Http\Controllers\Api\Root\GradeController;
+use App\Http\Controllers\Api\Root\FormationAreaController;
+use App\Http\Controllers\Api\Root\AcademicYearController;
 
 //Route::post('/login', [AuthController::class, 'login'])->middleware(IdentifyInstitution::class);
 Route::post('/login', [AuthController::class, 'login']);
@@ -28,5 +34,18 @@ Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
     Route::post('institutions/upload-logo', [InstitutionController::class, 'uploadLogo']);
     Route::apiResource('institutions', InstitutionController::class);
     Route::apiResource('campuses', CampusController::class);
+    Route::get('roles', [RoleController::class, 'index']);
+    Route::apiResource('institution-roles', InstitutionRoleController::class);
+    
+    // Educational Structure
+    Route::apiResource('educational-levels', EducationalLevelController::class);
+    Route::get('institution-levels', [EducationalLevelController::class, 'getInstitutionLevels']);
+    Route::post('institution-levels/sync', [EducationalLevelController::class, 'syncInstitutionLevel']);
 
+    Route::apiResource('grades', GradeController::class);
+    Route::get('institution-grades', [GradeController::class, 'getInstitutionGrades']);
+    Route::post('institution-grades/sync', [GradeController::class, 'syncInstitutionGrade']);
+
+    Route::apiResource('formation-areas', FormationAreaController::class);
+    Route::apiResource('academic-years', AcademicYearController::class);
 });

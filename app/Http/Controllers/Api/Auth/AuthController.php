@@ -93,14 +93,39 @@ public function userContext(Request $request)
         $institution = \App\Models\Institution::where('website_url', $host)->first();
     }
 
-    // 3. Si sigue siendo null, responder con error controlado en lugar de romper el código
+    // 3. Si sigue siendo null, intentar ver si es un usuario ROOT (sin institución)
     if (!$institution) {
+        $rootRole = $user->institutionRoles()
+            ->whereNull('institution_id')
+            ->whereHas('role', function ($q) {
+                $q->where('slug', 'root');
+            })
+            ->with('role')
+            ->first();
+
+        if ($rootRole) {
+            return response()->json([
+                'user' => [
+                    'id' => $user->id,
+                    'full_name' => "{$user->first_name} {$user->last_name_1}",
+                    'avatar_url' => $user->avatar_url,
+                    'email' => $user->email,
+                ],
+                'context' => [
+                    'institution_name' => 'Root System Console',
+                    'role_slug' => 'root',
+                    'branding' => null,
+                ],
+                'redirect_to' => $this->calculateRedirect('root')
+            ]);
+        }
+
         return response()->json([
             'error' => 'No se pudo identificar la institución para el host: ' . $request->getHost()
         ], 400);
     }
 
-    // 4. Buscar el rol (ahora sí es seguro usar $institution->id)
+    // 4. Buscar el rol (normal para otros usuarios)
     $activeRole = $user->institutionRoles()
         ->where('institution_id', $institution->id)
         ->where('assignment_status', 'ACTIVE')
@@ -111,11 +136,11 @@ public function userContext(Request $request)
         'user' => [
             'id' => $user->id,
             'full_name' => "{$user->first_name} {$user->last_name_1}",
-	    'avatar_url' => $user->avatar_url,
+            'avatar_url' => $user->avatar_url,
             'email' => $user->email,
         ],
         'context' => [
-            'institution_name' => $institution->name,
+            'institution_name' => $institution->legal_name ?? $institution->short_name,
             'role_slug' => $activeRole->role->slug ?? 'no-role',
             'branding' => $institution->branding_colors,
         ],

@@ -19,16 +19,10 @@ class IdentifyInstitution
             ->where('is_active', true)
             ->first();
 
-        // 3. Validar si existe
-        if (!$institution) {
-            return response()->json([
-                'message' => 'Institución no identificada o inactiva.',
-                'detected_host' => $host
-            ], 400);
+        // 3. Validar si existe (Silencioso para permitir Root)
+        if ($institution) {
+            config(['app.current_institution' => $institution]);
         }
-
-        // 4. Compartir la institución con toda la aplicación
-        config(['app.current_institution' => $institution]);
 
         return $next($request);
     }
