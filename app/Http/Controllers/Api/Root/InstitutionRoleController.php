@@ -44,26 +44,35 @@ class InstitutionRoleController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $request->validate([
-            'institution_id' => 'required|uuid|exists:auth.institutions,id',
-            'role_id' => 'required|uuid|exists:auth.roles,id',
-            'is_active' => 'required|boolean'
-        ]);
+        try {
+            $request->validate([
+                'institution_id' => 'required|uuid|exists:App\Models\Institution,id',
+                'role_id' => 'required|uuid|exists:App\Models\Role,id',
+                'is_active' => 'required|boolean'
+            ]);
 
-        $institutionRole = InstitutionRole::updateOrCreate(
-            [
-                'institution_id' => $request->institution_id,
-                'role_id' => $request->role_id,
-            ],
-            [
-                'is_active' => $request->is_active
-            ]
-        );
+            $institutionRole = InstitutionRole::updateOrCreate(
+                [
+                    'institution_id' => $request->institution_id,
+                    'role_id' => $request->role_id,
+                ],
+                [
+                    'is_active' => $request->is_active
+                ]
+            );
 
-        return response()->json([
-            'message' => 'Rol de institución actualizado exitosamente.',
-            'data' => $institutionRole
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Rol de institución actualizado exitosamente.',
+                'data' => $institutionRole
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al procesar la solicitud',
+                'details' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
