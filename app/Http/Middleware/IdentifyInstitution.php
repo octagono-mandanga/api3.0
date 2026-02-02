@@ -10,16 +10,15 @@ use Symfony\Component\HttpFoundation\Response;
 class IdentifyInstitution
 {
     public function handle(Request $request, Closure $next): Response
-    {
-        // 1. Obtener el dominio (ej. platform.mandanga.co)
+    {        
         $host = $request->getHost();
 
-        // 2. Buscar en la tabla auth.institutions
+     
         $institution = Institution::where('website_url', $host)
             ->where('status', 'ACTIVE')
             ->first();
 
-        // 3. Validar si existe (Silencioso para permitir Root)
+        
         if ($institution) {
             config(['app.current_institution' => $institution]);
         }
