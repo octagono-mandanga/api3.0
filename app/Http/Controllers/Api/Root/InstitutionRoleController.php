@@ -26,8 +26,7 @@ class InstitutionRoleController extends Controller
         // Traer SOLO los roles que la institución tiene habilitados exclusivamente
         $roles = Role::join('auth.institution_roles', function ($join) use ($institutionId) {
             $join->on('auth.roles.id', '=', 'auth.institution_roles.role_id')
-                 ->where('auth.institution_roles.institution_id', '=', $institutionId)
-                 ->where('auth.institution_roles.is_active', '=', true);
+                 ->where('auth.institution_roles.institution_id', '=', $institutionId);
         })
         ->select(
             'auth.roles.*',
