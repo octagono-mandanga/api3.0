@@ -2,7 +2,7 @@ name: Deploy Mandanga Platform
 
 on:
   push:
-    branches: [ main ] # Se ejecuta cuando subes cambios a la rama main
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -19,17 +19,39 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            echo "--- DATOS DE CONEXIÓN ---"
+            echo "IP Pública: $(curl -s https://ifconfig.me)"
+            echo "Usuario: $(whoami)"
+            echo "Directorio inicial: $(pwd)"
+            echo "--------------------------"
+            
             cd /var/www/mandanga-platform
+            
+            # 1. Configuración de seguridad
             git config --global --add safe.directory /var/www/mandanga-platform
             
-            # PASO RADICAL: Borrar el índice de git si está corrupto
-            rm -f .git/index
-            git reset --hard HEAD
+            # 2. Diagnóstico del archivo ANTES del reset
+            echo "--- ANTES DEL RESET ---"
+            ls -la routes/api.php
+            echo "Último commit local: $(git log -1 --format='%s')"
             
-            # Sincronización forzada
+            # 3. FORZAR ACTUALIZACIÓN (Descartar todo lo local)
             git fetch origin main
             git reset --hard origin/main
             git clean -fd
             
-            # Limpieza de Laravel (Vital)
+            # 4. Diagnóstico DESPUÉS del reset
+            echo "--- DESPUÉS DEL RESET ---"
+            ls -la routes/api.php
+            echo "Nuevo commit local: $(git log -1 --format='%s')"
+            
+            # 5. Limpieza de Laravel (Crucial para ver cambios en la API)
+            composer install --no-interaction --prefer-dist --optimize-autoloader
             php artisan optimize:clear
+            php artisan route:clear
+            
+            echo "--- PRUEBA DE CONTENIDO ---"
+            # Buscamos si existe alguna ruta de test que hayas puesto en api.php
+            grep "test" routes/api.php || echo "No se encontró la palabra 'test' en api.php"
+            
+            echo "¡Deploy finalizado!"
