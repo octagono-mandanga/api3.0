@@ -71,10 +71,18 @@ class InstitutionRoleController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+            $isEnabled = $request->input('is_enabled') ?? $request->input('is_active');
+            
+            if (is_null($isEnabled)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El campo is_enabled o is_active es requerido.'
+                ], 422);
+            }
+
             $request->validate([
                 'institution_id' => 'required|uuid|exists:App\Models\Institution,id',
-                'role_id' => 'required|uuid|exists:App\Models\Role,id',
-                'is_enabled' => 'required|boolean'
+                'role_id' => 'required|uuid|exists:App\Models\Role,id'
             ]);
 
             $institutionRole = InstitutionRole::updateOrCreate(
@@ -83,7 +91,7 @@ class InstitutionRoleController extends Controller
                     'role_id' => $request->role_id,
                 ],
                 [
-                    'is_active' => $request->is_enabled
+                    'is_active' => $isEnabled
                 ]
             );
 
@@ -107,13 +115,18 @@ class InstitutionRoleController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         try {
-            $request->validate([
-                'is_enabled' => 'required|boolean'
-            ]);
+            $isEnabled = $request->input('is_enabled') ?? $request->input('is_active');
+            
+            if (is_null($isEnabled)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El campo is_enabled o is_active es requerido.'
+                ], 422);
+            }
 
             $institutionRole = InstitutionRole::findOrFail($id);
             $institutionRole->update([
-                'is_active' => $request->is_enabled
+                'is_active' => $isEnabled
             ]);
 
             return response()->json([
