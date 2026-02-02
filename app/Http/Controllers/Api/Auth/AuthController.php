@@ -26,8 +26,7 @@ class AuthController extends Controller
 	                return response()->json(['message' => 'Credenciales inválidas'], 401);
 	            }
 /*
-	            
-                // 2. Validar Institución (vía Middleware)
+	            // 2. Validar Institución (vía Middleware)
 	            $institution = config('app.current_institution');
 	            if (!$institution) {
 	                return response()->json(['message' => 'Institución no detectada'], 400);
