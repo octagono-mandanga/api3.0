@@ -18,16 +18,29 @@ jobs:
           username: ${{ secrets.SSH_USER }} 
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          script: |
+          script: |          
+            cd /var/www/mandanga-platform
+            
+            # A. Forzar a Git a ignorar cambios locales de permisos
+            git config core.fileMode false
+            
+            # B. Limpieza atómica: Descartar cualquier basura antes de traer lo nuevo
+            git reset --hard HEAD
+            git clean -fd
+            
+            # C. Sincronizar
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # D. Optimizar Laravel
+            php artisan optimize:clear
             echo "--- DATOS DE CONEXIÓN ---"
             echo "IP Pública (IPv4): $(curl -4 -s https://ifconfig.me)"
             echo "IP Pública (IPv6): $(curl -6 -s https://ifconfig.me || echo 'No disponible')"
             echo "Usuario: $(whoami)"
             echo "Directorio inicial: $(pwd)"
-            echo "--------------------------"
-            
-            cd /var/www/mandanga-platform
-            
+            echo "--------------------------"            
+                        
             # 1. Configuración de seguridad
             git config --global --add safe.directory /var/www/mandanga-platform
             
