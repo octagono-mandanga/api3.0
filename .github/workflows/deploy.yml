@@ -18,54 +18,50 @@ jobs:
           username: ${{ secrets.SSH_USER }} 
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          script: |          
-            cd /var/www/mandanga-platform
+          script: |
+            echo "--- INICIANDO DEPLOY ATÓMICO ---"
             
-            # A. Forzar a Git a ignorar cambios locales de permisos
-            git config core.fileMode false
+            # 1. Definir rutas
+            PROJECT_DIR="/var/www/mandanga-platform"
+            TEMP_DIR="/var/www/mandanga_temp_$(date +%s)"
             
-            # B. Limpieza atómica: Descartar cualquier basura antes de traer lo nuevo
-            git reset --hard HEAD
-            git clean -fd
+            # 2. Clonar el repositorio limpio en una carpeta temporal
+            echo "Clonando versión limpia de GitHub..."
+            git clone -b main https://github.com/tu-usuario/tu-repo.git $TEMP_DIR
             
-            # C. Sincronizar
-            git fetch origin main
-            git reset --hard origin/main
+            # 3. Borrar directorios críticos en el proyecto actual
+            echo "Limpiando directorios antiguos..."
+            # Borramos las carpetas que contienen la lógica para asegurar frescura
+            rm -rf $PROJECT_DIR/app/Http
+            rm -rf $PROJECT_DIR/app/Models
+            rm -rf $PROJECT_DIR/app/Services
+            rm -rf $PROJECT_DIR/routes
+            rm -rf $PROJECT_DIR/database
+            rm -rf $PROJECT_DIR/config
             
-            # D. Optimizar Laravel
-            php artisan optimize:clear
-            echo "--- DATOS DE CONEXIÓN ---"
-            echo "IP Pública (IPv4): $(curl -4 -s https://ifconfig.me)"
-            echo "IP Pública (IPv6): $(curl -6 -s https://ifconfig.me || echo 'No disponible')"
-            echo "Usuario: $(whoami)"
-            echo "Directorio inicial: $(pwd)"
-            echo "--------------------------"            
-                        
-            # 1. Configuración de seguridad
-            git config --global --add safe.directory /var/www/mandanga-platform
+            # 4. Copiar los archivos nuevos desde la temporal al proyecto real
+            echo "Trasladando archivos nuevos..."
+            cp -R $TEMP_DIR/app/Http $PROJECT_DIR/app/
+            cp -R $TEMP_DIR/app/Models $PROJECT_DIR/app/
+            cp -R $TEMP_DIR/app/Services $PROJECT_DIR/app/
+            cp -R $TEMP_DIR/routes $PROJECT_DIR/
+            cp -R $TEMP_DIR/database $PROJECT_DIR/
+            cp -R $TEMP_DIR/config $PROJECT_DIR/
             
-            # 2. Diagnóstico del archivo ANTES del reset
-            echo "--- ANTES DEL RESET ---"
-            ls -la routes/api.php
-            echo "Último commit local: $(git log -1 --format='%s')"
+            # Copiar también el composer.json por si hubo cambios en dependencias
+            cp $TEMP_DIR/composer.json $PROJECT_DIR/
             
-            # 3. FORZAR ACTUALIZACIÓN (Descartar todo lo local)
-            git fetch origin main
-            git reset --hard origin/main
-            git clean -fd
+            # 5. Limpiar y ajustar
+            echo "Finalizando y limpiando..."
+            rm -rf $TEMP_DIR
             
-            # 4. Diagnóstico DESPUÉS del reset
-            echo "--- DESPUÉS DEL RESET ---"
-            ls -la routes/api.php
-            echo "Nuevo commit local: $(git log -1 --format='%s')"
+            cd $PROJECT_DIR
             
-            # 5. Limpieza de Laravel (Crucial para ver cambios en la API)
+            # Reinstalar dependencias y limpiar TODO en Laravel
             composer install --no-interaction --prefer-dist --optimize-autoloader
             php artisan optimize:clear
-            php artisan route:clear
             
-            echo "--- PRUEBA DE CONTENIDO ---"
-            # Buscamos si existe alguna ruta de test que hayas puesto en api.php
-            grep "test" routes/api.php || echo "No se encontró la palabra 'test' en api.php"
+            # Asegurar permisos una última vez
+            sudo chown -R mandanga3:mandanga3 $PROJECT_DIR
             
-            echo "¡Deploy finalizado!"
+            echo "--- DEPLOY ATÓMICO FINALIZADO ---"
