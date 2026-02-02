@@ -49,7 +49,7 @@ Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
     Route::post('institutions/upload-logo', [InstitutionController::class, 'uploadLogo']);
     Route::apiResource('institutions', InstitutionController::class);
     Route::apiResource('campuses', CampusController::class);
-  //  Route::get('roles', [RoleController::class, 'index']);
+    Route::get('roles', [RoleController::class, 'index']);
 
   // RUTA 1: Test directo en institution-roles
   /*  
