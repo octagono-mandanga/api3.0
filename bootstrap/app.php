@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Añadimos tu middleware aquí para que se ejecute siempre
 //        $middleware->append(\App\Http\Middleware\IdentifyInstitution::class);
+        $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
