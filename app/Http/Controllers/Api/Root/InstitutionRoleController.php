@@ -87,7 +87,7 @@ class InstitutionRoleController extends Controller
             $request->validate([
                 'institution_id' => 'required|uuid|exists:App\Models\Institution,id',
                 'role_id' => 'required|uuid|exists:App\Models\Role,id',
-                'is_active' => 'required|boolean'
+                'is_enabled' => 'required|boolean'
             ]);
 
             $institutionRole = InstitutionRole::updateOrCreate(
@@ -96,19 +96,48 @@ class InstitutionRoleController extends Controller
                     'role_id' => $request->role_id,
                 ],
                 [
-                    'is_active' => $request->is_active
+                    'is_active' => $request->is_enabled
                 ]
             );
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Rol de institución actualizado exitosamente.',
+                'message' => 'Rol de institución creado/actualizado exitosamente.',
                 'data' => $institutionRole
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error al procesar la solicitud',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update the association status.
+     */
+    public function update(Request $request, $id): JsonResponse
+    {
+        try {
+            $request->validate([
+                'is_enabled' => 'required|boolean'
+            ]);
+
+            $institutionRole = InstitutionRole::findOrFail($id);
+            $institutionRole->update([
+                'is_active' => $request->is_enabled
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Estado del rol actualizado correctamente.',
+                'data' => $institutionRole
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al actualizar el registro',
                 'details' => $e->getMessage()
             ], 500);
         }
