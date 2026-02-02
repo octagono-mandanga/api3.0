@@ -20,7 +20,8 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             echo "--- DATOS DE CONEXIÓN ---"
-            echo "IP Pública: $(curl -s https://ifconfig.me)"
+            echo "IP Pública (IPv4): $(curl -4 -s https://ifconfig.me)"
+            echo "IP Pública (IPv6): $(curl -6 -s https://ifconfig.me || echo 'No disponible')"
             echo "Usuario: $(whoami)"
             echo "Directorio inicial: $(pwd)"
             echo "--------------------------"
