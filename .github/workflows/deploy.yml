@@ -20,24 +20,34 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd /var/www/mandanga-platform
-            echo "Estoy en: $(pwd)"
-            echo "Último commit en esta carpeta:"
-            git log -1 --format="%s"
             
-            # 1. Marcar directorio como seguro para el usuario mandanga3
+            # 1. Forzar la identidad del directorio
             git config --global --add safe.directory /var/www/mandanga-platform
             
-            # 2. Bajar cambios de GitHub (Lógica actualizada)
-            git pull origin main
+            # 2. LIMPIEZA RADICAL DE GIT
+            # Trae lo nuevo de GitHub sin intentar fusionar todavía
+            git fetch origin main
             
-            # 3. Instalar dependencias de PHP (Sin tocar la DB ni el .env)
+            # Descarta CUALQUIER cambio local y fuerza a que el VPS sea igual a GitHub
+            git reset --hard origin/main
+            
+            # Borra archivos que no estén en el repositorio (excepto los ignorados como .env)
+            git clean -fd
+            
+            # 3. Reinstalar dependencias (Si hay cambios en composer.json, esto los aplica)
             composer install --no-interaction --prefer-dist --optimize-autoloader
             
-            # 4. Limpieza y Optimización de caché
-            # Quitamos 'migrate' para que no toque la estructura de Postgres
+            # 4. LIMPIEZA TOTAL DE LARAVEL
+            # Forzamos el borrado de cualquier caché de rutas o configuración vieja
             php artisan optimize:clear
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
+            php artisan view:clear
+            php artisan config:clear
+            php artisan route:clear
             
-            echo "¡Deploy de Mandanga (Lógica) finalizado con éxito por mandanga3!"
+            # 5. Diagnóstico final en el log de GitHub
+            echo "--- VERIFICACIÓN FINAL ---"
+            echo "Directorio: $(pwd)"
+            echo "Último commit aplicado:"
+            git log -1 --format="%s"
+            
+            echo "¡Deploy forzado de Mandanga finalizado!"
