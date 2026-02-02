@@ -38,7 +38,7 @@ jobs:
             composer install --no-interaction --prefer-dist --optimize-autoloader
             
             # 4. LIMPIEZA TOTAL DE LARAVEL
-            # Forzamos el borrado de cualquier caché de rutas o configuración vieja
+            # Forzamos el borrado de cualquier caché de rutas o configuración vieja - Probar
             php artisan optimize:clear
             php artisan view:clear
             php artisan config:clear
