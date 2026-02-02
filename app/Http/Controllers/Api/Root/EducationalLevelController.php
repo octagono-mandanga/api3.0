@@ -11,64 +11,118 @@ use Illuminate\Support\Facades\DB;
 
 class EducationalLevelController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(): JsonResponse
     {
-        $institutionId = $request->query('institution_id');
-
-        if ($institutionId) {
-            $levels = EducationalLevel::leftJoin('core.institution_educational_levels', function ($join) use ($institutionId) {
-                $join->on('core.educational_levels.id', '=', 'core.institution_educational_levels.educational_level_id')
-                     ->where('core.institution_educational_levels.institution_id', '=', $institutionId);
-            })
-            ->select(
-                'core.educational_levels.*',
-                DB::raw('COALESCE(core.institution_educational_levels.is_active, false) as is_enabled'),
-                'core.institution_educational_levels.id as association_id'
-            )
-            ->orderBy('core.educational_levels.order')
-            ->get();
-        } else {
-            $levels = EducationalLevel::orderBy('order')->get();
-        }
-
-        return response()->json($levels);
+        return response()->json(EducationalLevel::orderBy('order')->get());
     }
 
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'order' => 'nullable|integer'
-        ]);
+        try {
+            $data = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'order' => 'nullable|integer'
+            ]);
 
-        $level = EducationalLevel::create($data);
-        return response()->json($level, 201);
+            $level = EducationalLevel::create($data);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Nivel educativo creado exitosamente.',
+                'data' => $level
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al crear el nivel educativo',
+                'details' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show($id): JsonResponse
     {
-        return response()->json(EducationalLevel::findOrFail($id));
+        try {
+            $level = EducationalLevel::findOrFail($id);
+            return response()->json($level);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Nivel educativo no encontrado',
+                'details' => $e->getMessage()
+            ], 404);
+        }
     }
 
     public function update(Request $request, $id): JsonResponse
     {
-        $level = EducationalLevel::findOrFail($id);
-        $data = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'order' => 'nullable|integer'
-        ]);
+        try {
+            $level = EducationalLevel::findOrFail($id);
+            $data = $request->validate([
+                'name' => 'sometimes|required|string|max:255',
+                'description' => 'nullable|string',
+                'order' => 'nullable|integer'
+            ]);
 
-        $level->update($data);
-        return response()->json($level);
+            $level->update($data);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Nivel educativo actualizado exitosamente.',
+                'data' => $level
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al actualizar el nivel educativo',
+                'details' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id): JsonResponse
     {
-        $level = EducationalLevel::findOrFail($id);
-        $level->delete();
-        return response()->json(null, 204);
+        try {
+            $level = EducationalLevel::findOrFail($id);
+            $level->delete();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Nivel educativo eliminado exitosamente.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al eliminar el nivel educativo',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get levels for a specific institution with active status.
+     */
+    public function getInstitutionLevels(Request $request): JsonResponse
+    {
+        $institutionId = $request->query('institution_id');
+
+        if (!$institutionId) {
+            return response()->json(['error' => 'El ID de la institución es requerido.'], 400);
+        }
+
+        $levels = EducationalLevel::leftJoin('core.institution_educational_levels', function ($join) use ($institutionId) {
+            $join->on('core.educational_levels.id', '=', 'core.institution_educational_levels.educational_level_id')
+                 ->where('core.institution_educational_levels.institution_id', '=', $institutionId);
+        })
+        ->select(
+            'core.educational_levels.*',
+            DB::raw('COALESCE(core.institution_educational_levels.is_active, false) as is_enabled'),
+            'core.institution_educational_levels.id as association_id'
+        )
+        ->orderBy('core.educational_levels.order')
+        ->get();
+
+        return response()->json($levels);
     }
 
     /**
