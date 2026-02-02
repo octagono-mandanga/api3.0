@@ -40,6 +40,15 @@ class InstitutionRoleController extends Controller
     }
 
     /**
+     * Display the specified resource.
+     */
+    public function show($id): JsonResponse
+    {
+        $institutionRole = InstitutionRole::with('role')->findOrFail($id);
+        return response()->json($institutionRole);
+    }
+
+    /**
      * Store or update the association of a role with an institution.
      */
     public function store(Request $request): JsonResponse
