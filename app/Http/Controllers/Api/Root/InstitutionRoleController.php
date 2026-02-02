@@ -23,15 +23,16 @@ class InstitutionRoleController extends Controller
             return response()->json(['error' => 'El ID de la institución es requerido.'], 400);
         }
 
-        // Traer todos los roles y adjuntar el estado de la institución seleccionada
-        $roles = Role::leftJoin('auth.institution_roles', function ($join) use ($institutionId) {
+        // Traer SOLO los roles que la institución tiene habilitados exclusivamente
+        $roles = Role::join('auth.institution_roles', function ($join) use ($institutionId) {
             $join->on('auth.roles.id', '=', 'auth.institution_roles.role_id')
-                 ->where('auth.institution_roles.institution_id', '=', $institutionId);
+                 ->where('auth.institution_roles.institution_id', '=', $institutionId)
+                 ->where('auth.institution_roles.is_active', '=', true);
         })
         ->select(
             'auth.roles.*',
             'auth.institution_roles.id as association_id',
-            DB::raw('COALESCE(auth.institution_roles.is_active, false) as is_enabled')
+            DB::raw('true as is_enabled')
         )
         ->get();
 
