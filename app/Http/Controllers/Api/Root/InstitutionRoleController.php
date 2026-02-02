@@ -45,27 +45,14 @@ class InstitutionRoleController extends Controller
     public function show($id): JsonResponse
     {
         try {
-            $record = InstitutionRole::with('role')->find($id);
+            $response = InstitutionRole::with('role')->find($id);
 
-            if (!$record) {
+            if (!$response) {
                 return response()->json([
                     'status' => 'error',
                     'message' => "No se encontró la asociación con ID: $id"
                 ], 404);
             }
-
-            // Mapear al formato esperado si es necesario
-            $response = [
-                'id' => $record->role->id,
-                'slug' => $record->role->slug,
-                'name' => $record->role->name,
-                'branding_colors' => $record->role->branding_colors,
-                'description' => null, // O record->role->description si existiera
-                'association_id' => $record->id,
-                'is_enabled' => $record->is_active,
-                'institution_id' => $record->institution_id,
-                'role_id' => $record->role_id
-            ];
 
             return response()->json($response);
 
