@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 class RoleController extends Controller
 {
     /**
-     * Display a listing of all roles, optionally with association status for an institution.
+     * Display a listing of all roles, optionally with association status.
      */
     public function index(Request $request): JsonResponse
     {
