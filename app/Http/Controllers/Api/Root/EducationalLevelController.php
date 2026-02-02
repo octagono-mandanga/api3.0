@@ -11,9 +11,27 @@ use Illuminate\Support\Facades\DB;
 
 class EducationalLevelController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(EducationalLevel::orderBy('order')->get());
+        $institutionId = $request->query('institution_id');
+
+        if ($institutionId) {
+            $levels = EducationalLevel::leftJoin('core.institution_educational_levels', function ($join) use ($institutionId) {
+                $join->on('core.educational_levels.id', '=', 'core.institution_educational_levels.educational_level_id')
+                     ->where('core.institution_educational_levels.institution_id', '=', $institutionId);
+            })
+            ->select(
+                'core.educational_levels.*',
+                DB::raw('COALESCE(core.institution_educational_levels.is_active, false) as is_enabled'),
+                'core.institution_educational_levels.id as association_id'
+            )
+            ->orderBy('core.educational_levels.order')
+            ->get();
+        } else {
+            $levels = EducationalLevel::orderBy('order')->get();
+        }
+
+        return response()->json($levels);
     }
 
     public function store(Request $request): JsonResponse
@@ -54,52 +72,46 @@ class EducationalLevelController extends Controller
     }
 
     /**
-     * Get levels for a specific institution with active status.
-     */
-    public function getInstitutionLevels(Request $request): JsonResponse
-    {
-        $request->validate([
-            'institution_id' => 'required|uuid|exists:auth.institutions,id'
-        ]);
-
-        $institutionId = $request->institution_id;
-
-        $levels = EducationalLevel::leftJoin('core.institution_educational_levels', function ($join) use ($institutionId) {
-            $join->on('educational_levels.id', '=', 'institution_educational_levels.educational_level_id')
-                 ->where('institution_educational_levels.institution_id', '=', $institutionId);
-        })
-        ->select(
-            'core.educational_levels.*',
-            DB::raw('COALESCE(core.institution_educational_levels.is_active, false) as is_enabled'),
-            'core.institution_educational_levels.id as association_id'
-        )
-        ->orderBy('core.educational_levels.order')
-        ->get();
-
-        return response()->json($levels);
-    }
-
-    /**
      * Sync level association for an institution.
      */
     public function syncInstitutionLevel(Request $request): JsonResponse
     {
-        $request->validate([
-            'institution_id' => 'required|uuid|exists:auth.institutions,id',
-            'educational_level_id' => 'required|uuid|exists:core.educational_levels,id',
-            'is_active' => 'required|boolean'
-        ]);
+        try {
+            $isEnabled = $request->input('is_enabled') ?? $request->input('is_active');
+            
+            if (is_null($isEnabled)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El campo is_enabled o is_active es requerido.'
+                ], 422);
+            }
 
-        $association = InstitutionLevel::updateOrCreate(
-            [
-                'institution_id' => $request->institution_id,
-                'educational_level_id' => $request->educational_level_id,
-            ],
-            [
-                'is_active' => $request->is_active
-            ]
-        );
+            $request->validate([
+                'institution_id' => 'required|uuid|exists:auth.institutions,id',
+                'educational_level_id' => 'required|uuid|exists:core.educational_levels,id'
+            ]);
 
-        return response()->json($association);
+            $association = InstitutionLevel::updateOrCreate(
+                [
+                    'institution_id' => $request->institution_id,
+                    'educational_level_id' => $request->educational_level_id,
+                ],
+                [
+                    'is_active' => $isEnabled
+                ]
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Nivel educativo sincronizado correctamente.',
+                'data' => $association
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al sincronizar el nivel educativo',
+                'details' => $e->getMessage()
+            ], 500);
+        }
     }
 }

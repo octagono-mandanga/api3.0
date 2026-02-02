@@ -13,13 +13,34 @@ class GradeController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Grade::with('educationalLevel')->orderBy('order');
-        
-        if ($request->has('educational_level_id')) {
-            $query->where('educational_level_id', $request->educational_level_id);
+        $institutionId = $request->query('institution_id');
+        $levelId = $request->query('educational_level_id');
+
+        if ($institutionId) {
+            $query = Grade::leftJoin('core.institution_grades', function ($join) use ($institutionId) {
+                $join->on('core.grades.id', '=', 'core.institution_grades.grade_id')
+                     ->where('core.institution_grades.institution_id', '=', $institutionId);
+            })
+            ->select(
+                'core.grades.*',
+                DB::raw('COALESCE(core.institution_grades.is_active, false) as is_enabled'),
+                'core.institution_grades.id as association_id'
+            );
+
+            if ($levelId) {
+                $query->where('core.grades.educational_level_id', $levelId);
+            }
+
+            $grades = $query->orderBy('core.grades.order')->get();
+        } else {
+            $query = Grade::with('educationalLevel')->orderBy('order');
+            if ($levelId) {
+                $query->where('educational_level_id', $levelId);
+            }
+            $grades = $query->get();
         }
 
-        return response()->json($query->get());
+        return response()->json($grades);
     }
 
     public function store(Request $request): JsonResponse
@@ -62,58 +83,46 @@ class GradeController extends Controller
     }
 
     /**
-     * Get grades for a specific institution with active status.
-     */
-    public function getInstitutionGrades(Request $request): JsonResponse
-    {
-        $request->validate([
-            'institution_id' => 'required|uuid|exists:auth.institutions,id',
-            'educational_level_id' => 'sometimes|uuid|exists:core.educational_levels,id'
-        ]);
-
-        $institutionId = $request->institution_id;
-        $levelId = $request->educational_level_id;
-
-        $query = Grade::leftJoin('core.institution_grades', function ($join) use ($institutionId) {
-            $join->on('grades.id', '=', 'institution_grades.grade_id')
-                 ->where('institution_grades.institution_id', '=', $institutionId);
-        })
-        ->select(
-            'core.grades.*',
-            DB::raw('COALESCE(core.institution_grades.is_active, false) as is_enabled'),
-            'core.institution_grades.id as association_id'
-        );
-
-        if ($levelId) {
-            $query->where('core.grades.educational_level_id', $levelId);
-        }
-
-        $grades = $query->orderBy('core.grades.order')->get();
-
-        return response()->json($grades);
-    }
-
-    /**
      * Sync grade association for an institution.
      */
     public function syncInstitutionGrade(Request $request): JsonResponse
     {
-        $request->validate([
-            'institution_id' => 'required|uuid|exists:auth.institutions,id',
-            'grade_id' => 'required|uuid|exists:core.grades,id',
-            'is_active' => 'required|boolean'
-        ]);
+        try {
+            $isEnabled = $request->input('is_enabled') ?? $request->input('is_active');
+            
+            if (is_null($isEnabled)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'El campo is_enabled o is_active es requerido.'
+                ], 422);
+            }
 
-        $association = InstitutionGrade::updateOrCreate(
-            [
-                'institution_id' => $request->institution_id,
-                'grade_id' => $request->grade_id,
-            ],
-            [
-                'is_active' => $request->is_active
-            ]
-        );
+            $request->validate([
+                'institution_id' => 'required|uuid|exists:auth.institutions,id',
+                'grade_id' => 'required|uuid|exists:core.grades,id'
+            ]);
 
-        return response()->json($association);
+            $association = InstitutionGrade::updateOrCreate(
+                [
+                    'institution_id' => $request->institution_id,
+                    'grade_id' => $request->grade_id,
+                ],
+                [
+                    'is_active' => $isEnabled
+                ]
+            );
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Grado sincronizado correctamente.',
+                'data' => $association
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al sincronizar el grado',
+                'details' => $e->getMessage()
+            ], 500);
+        }
     }
 }

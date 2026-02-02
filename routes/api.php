@@ -75,11 +75,8 @@ Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
     
     // Educational Structure
     Route::apiResource('educational-levels', EducationalLevelController::class);
-    Route::get('institution-levels', [EducationalLevelController::class, 'getInstitutionLevels']);
     Route::post('institution-levels/sync', [EducationalLevelController::class, 'syncInstitutionLevel']); 
-
     Route::apiResource('grades', GradeController::class);
-    Route::get('institution-grades', [GradeController::class, 'getInstitutionGrades']);
     Route::post('institution-grades/sync', [GradeController::class, 'syncInstitutionGrade']);
 
     Route::apiResource('formation-areas', FormationAreaController::class);
