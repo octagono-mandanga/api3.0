@@ -42,7 +42,7 @@ Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
     Route::get('ping', function() { return response()->json(['status' => 'root-ok']); });
         
     
-    Route::get('institution-role/{id}', [InstitutionRoleController::class, 'show']);
+    Route::get('institutionrole/{id}', [InstitutionRoleController::class, 'show']);
     Route::get('institution-roles/{institution_id?}', [InstitutionRoleController::class, 'index']);
     Route::post('institution-roles', [InstitutionRoleController::class, 'store']);
     Route::delete('institution-roles/{id}', [InstitutionRoleController::class, 'destroy']);
