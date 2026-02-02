@@ -19,49 +19,35 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            echo "--- INICIANDO DEPLOY ATÓMICO ---"
-            
-            # 1. Definir rutas
             PROJECT_DIR="/var/www/mandanga-platform"
-            TEMP_DIR="/var/www/mandanga_temp_$(date +%s)"
-            
-            # 2. Clonar el repositorio limpio en una carpeta temporal
-            echo "Clonando versión limpia de GitHub..."
-            git clone -b main https://github.com/tu-usuario/tu-repo.git $TEMP_DIR
-            
-            # 3. Borrar directorios críticos en el proyecto actual
-            echo "Limpiando directorios antiguos..."
-            # Borramos las carpetas que contienen la lógica para asegurar frescura
-            rm -rf $PROJECT_DIR/app/Http
-            rm -rf $PROJECT_DIR/app/Models
-            rm -rf $PROJECT_DIR/app/Services
-            rm -rf $PROJECT_DIR/routes
-            rm -rf $PROJECT_DIR/database
-            rm -rf $PROJECT_DIR/config
-            
-            # 4. Copiar los archivos nuevos desde la temporal al proyecto real
-            echo "Trasladando archivos nuevos..."
-            cp -R $TEMP_DIR/app/Http $PROJECT_DIR/app/
-            cp -R $TEMP_DIR/app/Models $PROJECT_DIR/app/
-            cp -R $TEMP_DIR/app/Services $PROJECT_DIR/app/
-            cp -R $TEMP_DIR/routes $PROJECT_DIR/
-            cp -R $TEMP_DIR/database $PROJECT_DIR/
-            cp -R $TEMP_DIR/config $PROJECT_DIR/
-            
-            # Copiar también el composer.json por si hubo cambios en dependencias
-            cp $TEMP_DIR/composer.json $PROJECT_DIR/
-            
-            # 5. Limpiar y ajustar
-            echo "Finalizando y limpiando..."
-            rm -rf $TEMP_DIR
-            
             cd $PROJECT_DIR
-            
-            # Reinstalar dependencias y limpiar TODO en Laravel
+
+            echo "--- LIMPIANDO ESTADO DE GIT ---"
+            # Forzamos a git a que olvide cualquier cambio local o de permisos
+            git config core.fileMode false
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
+
+            echo "--- FORZANDO ACTUALIZACIÓN DE ARCHIVOS CRÍTICOS ---"
+            # Esto obliga a git a sobreescribir estos archivos específicos 
+            # desde el índice, por si acaso hubo errores de permisos.
+            git checkout origin/main -- app/Http/
+            git checkout origin/main -- app/Models/
+            git checkout origin/main -- routes/
+            git checkout origin/main -- config/
+
+            echo "--- LIMPIANDO LARAVEL ---"
             composer install --no-interaction --prefer-dist --optimize-autoloader
-            php artisan optimize:clear
             
-            # Asegurar permisos una última vez
-            sudo chown -R mandanga3:mandanga3 $PROJECT_DIR
+            # Usamos -f para que no falle si no hay cachés previas
+            php artisan optimize:clear || echo "Caché ya estaba limpia"
             
-            echo "--- DEPLOY ATÓMICO FINALIZADO ---"
+            echo "--- VERIFICACIÓN ---"
+            if [ -f "routes/api.php" ]; then
+                echo "✅ routes/api.php existe."
+                grep "TEST DIRECTO" routes/api.php || echo "⚠️ El texto de test no está en el archivo."
+            else
+                echo "❌ ERROR: routes/api.php sigue sin aparecer."
+                exit 1
+            fi
