@@ -41,14 +41,31 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
     Route::get('ping', function() { return response()->json(['status' => 'root-ok']); });
         
-    Route::get('institution-roles/{institution_id?}', [InstitutionRoleController::class, 'index']);
+ /*   Route::get('institution-roles/{institution_id?}', [InstitutionRoleController::class, 'index']);
     Route::post('institution-roles', [InstitutionRoleController::class, 'store']);
     Route::delete('institution-roles/{id}', [InstitutionRoleController::class, 'destroy']);
-
+*/
     Route::post('institutions/upload-logo', [InstitutionController::class, 'uploadLogo']);
     Route::apiResource('institutions', InstitutionController::class);
     Route::apiResource('campuses', CampusController::class);
-    Route::get('roles', [RoleController::class, 'index']);
+  //  Route::get('roles', [RoleController::class, 'index']);
+
+  // RUTA 1: Test directo en institution-roles
+    Route::get('institution-roles/{institution_id?}', function($institution_id = null) {
+        return response()->json([
+            'message' => 'TEST DIRECTO: Estas en InstitutionRole',
+            'recibi_id' => $institution_id,
+            'vps_time' => now()->toDateTimeString()
+        ]);
+    });
+
+    // RUTA 2: Test directo en roles
+    Route::get('roles', function() {
+        return response()->json([
+            'message' => 'TEST DIRECTO: Estas en RoleController',
+            'vps_time' => now()->toDateTimeString()
+        ]);
+    });
     
     // Educational Structure
     Route::apiResource('educational-levels', EducationalLevelController::class);
