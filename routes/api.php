@@ -110,6 +110,9 @@ Route::prefix('solicitudes')->middleware('throttle.solicitudes:general')->group(
     Route::post('/', [SolicitudActivacionController::class, 'crear'])
         ->middleware('throttle.solicitudes:crear');
 
+    // Obtener datos de una solicitud (para pre-llenar la página de configuración)
+    Route::get('/{id}', [SolicitudActivacionController::class, 'obtener']);
+
     // Verificar código email (paso 2)
     Route::post('/{id}/verificar-email', [SolicitudActivacionController::class, 'verificarEmail'])
         ->middleware('throttle.solicitudes:codigo');

@@ -26,6 +26,54 @@ class SolicitudActivacionController extends Controller
     }
 
     /**
+     * Obtiene los datos públicos de una solicitud para pre-llenar la página de configuración.
+     * No expone códigos de verificación.
+     */
+    public function obtener(Request $request, $id)
+    {
+        $solicitud = DB::table('core.solicitudes_activacion')
+            ->where('id', $id)
+            ->first();
+
+        if (!$solicitud) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'El enlace de configuración no es válido o ha expirado.',
+            ], 404);
+        }
+
+        // Si la solicitud aún no completó la verificación, no se puede configurar
+        if ($solicitud->estado !== 'completada') {
+            return response()->json([
+                'status'  => 'error',
+                'code'    => 'NO_COMPLETADA',
+                'message' => 'La verificación de identidad no ha sido completada. Complete primero el proceso de activación.',
+            ], 403);
+        }
+
+        // Si ya se hizo la configuración inicial (institucion_id ya fue asignado)
+        if ($solicitud->institucion_id) {
+            return response()->json([
+                'status'       => 'ya_configurado',
+                'message'      => 'La configuración inicial ya fue completada para esta solicitud.',
+                'institucion'  => $solicitud->nombre_institucion,
+                'completed_at' => $solicitud->completed_at,
+            ], 200);
+        }
+
+        // Devolver datos seguros para pre-llenar el formulario
+        return response()->json([
+            'status'             => 'disponible',
+            'nombre_institucion' => $solicitud->nombre_institucion,
+            'nombre_responsable' => $solicitud->nombre_responsable,
+            'correo'             => $solicitud->correo,
+            'telefono'           => $solicitud->telefono,
+            'niveles'            => [], // Se leerán de los datos almacenados si aplica
+            'completed_at'       => $solicitud->completed_at,
+        ]);
+    }
+
+    /**
      * Crea una nueva solicitud de activación institucional.
      * Paso 1: Registra datos y envía código por email.
      */

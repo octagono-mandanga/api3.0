@@ -164,7 +164,7 @@ class ResendService
                                         <div style="width: 26px; height: 26px; background: #4f46e5; border-radius: 50%; text-align: center; line-height: 26px; color: #fff; font-size: 13px; font-weight: 700;">1</div>
                                     </td>
                                     <td style="padding: 10px 0; color: #4b5563; font-size: 14px; line-height: 1.6;">
-                                        Ingresar a la plataforma con las credenciales que recibirá en un correo adicional.
+                                        Acceder a la plataforma a través del <strong>enlace de configuración inicial</strong> que encontrará más abajo en este correo.
                                     </td>
                                 </tr>
                                 <tr>
