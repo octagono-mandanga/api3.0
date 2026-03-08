@@ -7,18 +7,35 @@ use Illuminate\Support\Facades\Log;
 
 class TwilioService
 {
-    protected Client $client;
+    protected ?Client $client = null;
     protected string $fromNumber;
     protected string $brandName;
+    protected bool $habilitado;
 
     public function __construct()
     {
-        $sid = config('services.twilio.sid');
+        $sid   = config('services.twilio.sid');
         $token = config('services.twilio.token');
+        $this->fromNumber = config('services.twilio.from', '');
+        $this->brandName  = config('services.twilio.brand_name', 'Octagono');
 
-        $this->client = new Client($sid, $token);
-        $this->fromNumber = config('services.twilio.from');
-        $this->brandName = config('services.twilio.brand_name', 'Octagono');
+        // Si las credenciales no están configuradas, deshabilitar silenciosamente
+        // en lugar de explotar el constructor (lo que rompería también el email).
+        if (empty($sid) || empty($token) || empty($this->fromNumber)) {
+            $this->habilitado = false;
+            Log::warning('TwilioService: credenciales no configuradas (TWILIO_SID, TWILIO_TOKEN, TWILIO_FROM).');
+            return;
+        }
+
+        try {
+            $this->client    = new Client($sid, $token);
+            $this->habilitado = true;
+        } catch (\Exception $e) {
+            $this->habilitado = false;
+            Log::error('TwilioService: error al inicializar cliente Twilio', [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -26,11 +43,25 @@ class TwilioService
      */
     public function enviarCodigoVerificacion(string $telefono, string $codigo): bool
     {
+        if (!$this->habilitado || $this->client === null) {
+            Log::warning('TwilioService: SMS no enviado — servicio deshabilitado o sin credenciales.', [
+                'telefono' => $this->enmascararTelefono($telefono),
+            ]);
+            return false;
+        }
+
         try {
-            // Formatear número (asegurar formato internacional)
             $phoneNumber = $this->formatearNumero($telefono);
 
-            $mensaje = "Tu código de verificación de {$this->brandName} es: {$codigo}\n\nEste código expira en 10 minutos. No lo compartas con nadie.";
+            // Twilio no permite enviar al mismo número de origen (falla con HTTP 400)
+            if ($phoneNumber === $this->fromNumber) {
+                Log::error('TwilioService: el número destino es igual al número origen (TWILIO_FROM).', [
+                    'telefono' => $this->enmascararTelefono($telefono),
+                ]);
+                return false;
+            }
+
+            $mensaje = "Tu código de verificación de {$this->brandName} es: {$codigo}\n\nExpira en 10 minutos. No lo compartas con nadie.";
 
             $this->client->messages->create(
                 $phoneNumber,
@@ -46,10 +77,34 @@ class TwilioService
 
             return true;
 
-        } catch (\Exception $e) {
-            Log::error('Error al enviar SMS de verificación', [
+        } catch (\Twilio\Exceptions\RestException $e) {
+            // Errores conocidos de la API de Twilio con diagnóstico claro
+            $codigo_error = $e->getStatusCode();
+            $detalle = match (true) {
+                str_contains($e->getMessage(), 'not a verified')
+                    => 'Cuenta Twilio en modo Trial: el número destino no está verificado en twilio.com/console/phone-numbers/verified',
+                str_contains($e->getMessage(), 'cannot be the same')
+                    => 'El número destino es igual al número Twilio FROM — usa un número diferente para la prueba',
+                str_contains($e->getMessage(), 'not a valid phone number')
+                    => 'Número de teléfono con formato inválido: ' . $telefono,
+                str_contains($e->getMessage(), 'Account is not active')
+                    => 'La cuenta Twilio no está activa o está suspendida',
+                default
+                    => $e->getMessage(),
+            };
+
+            Log::error('TwilioService: error de API al enviar SMS', [
                 'telefono' => $this->enmascararTelefono($telefono),
-                'error' => $e->getMessage(),
+                'codigo_http' => $codigo_error,
+                'diagnostico' => $detalle,
+            ]);
+
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error('TwilioService: error inesperado al enviar SMS', [
+                'telefono' => $this->enmascararTelefono($telefono),
+                'error'    => $e->getMessage(),
             ]);
 
             return false;
@@ -57,25 +112,30 @@ class TwilioService
     }
 
     /**
-     * Formatea el número de teléfono al formato internacional.
+     * Verifica si el servicio está habilitado y configurado.
+     */
+    public function estaHabilitado(): bool
+    {
+        return $this->habilitado;
+    }
+
+    /**
+     * Formatea el número de teléfono al formato internacional E.164.
      */
     protected function formatearNumero(string $telefono): string
     {
         // Eliminar espacios y caracteres no numéricos excepto +
         $telefono = preg_replace('/[^\d+]/', '', $telefono);
 
-        // Si no tiene código de país, asumir Colombia (+57)
         if (!str_starts_with($telefono, '+')) {
-            // Si empieza con 57, agregar +
-            if (str_starts_with($telefono, '57')) {
+            if (str_starts_with($telefono, '57') && strlen($telefono) === 12) {
+                // Ya tiene código de país sin el +
                 $telefono = '+' . $telefono;
-            }
-            // Si es un número de 10 dígitos (móvil colombiano sin código)
-            elseif (strlen($telefono) === 10 && str_starts_with($telefono, '3')) {
+            } elseif (strlen($telefono) === 10 && str_starts_with($telefono, '3')) {
+                // Móvil colombiano de 10 dígitos (3XX XXX XXXX)
                 $telefono = '+57' . $telefono;
-            }
-            // Otro caso, agregar +57
-            else {
+            } else {
+                // Fallback: agregar +57
                 $telefono = '+57' . $telefono;
             }
         }
