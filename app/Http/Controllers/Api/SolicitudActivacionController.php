@@ -252,11 +252,19 @@ class SolicitudActivacionController extends Controller
 
         Cache::forget($intentosKey);
 
+        // Enviar email de notificación: cuenta creada por facilitador
+        $this->resendService->enviarNotificacionCuentaCreada(
+            $solicitud->correo,
+            $solicitud->nombre_institucion,
+            $solicitud->nombre_responsable,
+            config('app.frontend_url', 'https://app.octagono.co')
+        );
+
         return response()->json([
-            'status' => 'success',
-            'message' => '¡Activación completada exitosamente!',
-            'redirect_url' => "/configuracion/{$id}",
+            'status'  => 'success',
+            'message' => '¡Activación completada exitosamente! Recibirá un correo con los próximos pasos.',
         ]);
+
     }
 
     /**

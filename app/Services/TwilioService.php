@@ -61,7 +61,7 @@ class TwilioService
                 return false;
             }
 
-            $mensaje = "Tu código de verificación de {$this->brandName} es: {$codigo}\n\nExpira en 10 minutos. No lo compartas con nadie..";
+            $mensaje = "Tu código de verificación de {$this->brandName} es: {$codigo}\n\nExpira en 10 minutos. No lo compartas con nadie.";
 
             $this->client->messages->create(
                 $phoneNumber,
