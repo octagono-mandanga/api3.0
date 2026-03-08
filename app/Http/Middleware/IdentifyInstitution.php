@@ -4,23 +4,23 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use App\Models\Institution;
+use App\Models\Institucion;
 use Symfony\Component\HttpFoundation\Response;
 
 class IdentifyInstitution
 {
     public function handle(Request $request, Closure $next): Response
-    {        
+    {
         $host = $request->getHost();
 
-     
-        $institution = Institution::where('website_url', $host)
+
+        $institucion = Institucion::where('website_url', $host)
             ->where('status', 'ACTIVE')
             ->first();
 
-        
-        if ($institution) {
-            config(['app.current_institution' => $institution]);
+
+        if ($institucion) {
+            config(['app.current_institution' => $institucion]);
         }
 
         return $next($request);

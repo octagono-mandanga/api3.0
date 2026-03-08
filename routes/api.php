@@ -8,14 +8,14 @@ use App\Http\Middleware\IdentifyInstitution;
 use App\Http\Controllers\Api\ProfileController;
 
 //Root
-use App\Http\Controllers\Api\Root\InstitutionController;
-use App\Http\Controllers\Api\Root\CampusController;
-use App\Http\Controllers\Api\Root\RoleController;
-use App\Http\Controllers\Api\Root\InstitutionRoleController;
-use App\Http\Controllers\Api\Root\EducationalLevelController;
-use App\Http\Controllers\Api\Root\GradeController;
-use App\Http\Controllers\Api\Root\FormationAreaController;
-use App\Http\Controllers\Api\Root\AcademicYearController;
+use App\Http\Controllers\Api\Root\InstitucionController;
+use App\Http\Controllers\Api\Root\SedeController;
+use App\Http\Controllers\Api\Root\RolController;
+use App\Http\Controllers\Api\Root\RolInstitucionController;
+use App\Http\Controllers\Api\Root\NivelController;
+use App\Http\Controllers\Api\Root\GradoController;
+use App\Http\Controllers\Api\Root\AreaController;
+use App\Http\Controllers\Api\Root\LectivoController;
 
 //Route::post('/login', [AuthController::class, 'login'])->middleware(IdentifyInstitution::class);
 Route::get('/ping', function() { return response()->json(['status' => 'ok', 'time' => now()]); });
@@ -33,28 +33,28 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user-context', [AuthController::class, 'userContext']);
     //Generales
     Route::get('/profile', [ProfileController::class, 'show']);
-    Route::put('/profile/update', [ProfileController::class, 'update']); 
+    Route::put('/profile/update', [ProfileController::class, 'update']);
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
 });
 
 
 Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
     Route::get('ping', function() { return response()->json(['status' => 'root-ok']); });
-        
-    
-    Route::get('institutionrole/{id}', [InstitutionRoleController::class, 'show']);
-    Route::get('institution-roles/{institution_id?}', [InstitutionRoleController::class, 'index']);
-    Route::post('institution-roles', [InstitutionRoleController::class, 'store']);
-    Route::put('institution-roles/{id}', [InstitutionRoleController::class, 'update']);
-    Route::delete('institution-roles/{id}', [InstitutionRoleController::class, 'destroy']);
 
-    Route::post('institutions/upload-logo', [InstitutionController::class, 'uploadLogo']);
-    Route::apiResource('institutions', InstitutionController::class);
-    Route::apiResource('campuses', CampusController::class);
-    Route::get('roles', [RoleController::class, 'index']);
+
+    Route::get('roles-institucion/{id}', [RolInstitucionController::class, 'show']);
+    Route::get('roles-institucion/{institution_id?}', [RolInstitucionController::class, 'index']);
+    Route::post('roles-institucion', [RolInstitucionController::class, 'store']);
+    Route::put('roles-institucion/{id}', [RolInstitucionController::class, 'update']);
+    Route::delete('roles-institucion/{id}', [RolInstitucionController::class, 'destroy']);
+
+    Route::post('instituciones/upload-logo', [InstitucionController::class, 'uploadLogo']);
+    Route::apiResource('instituciones', InstitucionController::class);
+    Route::apiResource('sedes', SedeController::class);
+    Route::get('roles', [RolController::class, 'index']);
 
   // RUTA 1: Test directo en institution-roles
-  /*  
+  /*
   Route::get('institution-roles/{institution_id?}', function($institution_id = null) {
         return response()->json([
             'message' => 'TEST DIRECTO: Estas en InstitutionRole',
@@ -72,13 +72,14 @@ Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
         ]);
     });
     */
-    
-    // Educational Structure
-    Route::apiResource('educational-levels', EducationalLevelController::class);
-    Route::get('institution-levels', [EducationalLevelController::class, 'getInstitutionLevels']);
-    Route::post('institution-levels/sync', [EducationalLevelController::class, 'syncInstitutionLevel']);     Route::apiResource('grades', GradeController::class);
-    Route::post('institution-grades/sync', [GradeController::class, 'syncInstitutionGrade']);
 
-    Route::apiResource('formation-areas', FormationAreaController::class);
-    Route::apiResource('academic-years', AcademicYearController::class);
+    // Estructura Educativa
+    Route::apiResource('niveles', NivelController::class);
+    Route::get('niveles-institucion', [NivelController::class, 'getInstitutionLevels']);
+    Route::post('niveles-institucion/sync', [NivelController::class, 'syncInstitutionLevel']);
+    Route::apiResource('grados', GradoController::class);
+    Route::post('grados-institucion/sync', [GradoController::class, 'syncInstitutionGrade']);
+
+    Route::apiResource('areas', AreaController::class);
+    Route::apiResource('lectivos', LectivoController::class);
 });

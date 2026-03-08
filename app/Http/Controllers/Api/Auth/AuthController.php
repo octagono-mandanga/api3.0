@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Usuario;
+use App\Models\Institucion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,7 +19,7 @@ class AuthController extends Controller
 	            ]);
 
 	            // 1. Validar Usuario y Password
-	            $user = User::where('email', $credentials['email'])
+	            $user = Usuario::where('email', $credentials['email'])
 //	                        ->where('global_status', 'ACTIVE')
 	                        ->first();
 
@@ -31,7 +32,7 @@ class AuthController extends Controller
 	            if (!$institution) {
 	                return response()->json(['message' => 'Institución no detectada'], 400);
 	            }
-	            
+
 	            $hasRole = $user->institutionRoles()
 	                ->where('institution_id', $institution->id)
 	                ->where('assignment_status', 'ACTIVE')
@@ -52,7 +53,7 @@ class AuthController extends Controller
 	                ]
 	            ]);
 
-	        } catch (\Exception $e) {	            
+	        } catch (\Exception $e) {
 	            return response()->json([
 	                'error' => 'Error Fatal en el Servidor',
 	                'details' => $e->getMessage()
@@ -63,7 +64,7 @@ class AuthController extends Controller
 
 public function logout(Request $request)
 {
-    try {        
+    try {
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
@@ -81,31 +82,31 @@ public function logout(Request $request)
 public function userContext(Request $request)
 {
     $user = $request->user();
-    
+
     // 1. Intentar obtener la institución desde la config global (Middleware)
     $institution = config('app.current_institution');
 
     // 2. Si es null, intentar identificarla manualmente por el Host como "Plan B"
     if (!$institution) {
         $host = $request->getHost();
-        $institution = \App\Models\Institution::where('website_url', $host)->first();
+        $institution = Institucion::where('website_url', $host)->first();
     }
 
     // 3. Si sigue siendo null, intentar ver si es un usuario ROOT (sin institución)
     if (!$institution) {
-        $rootRole = $user->institutionRoles()
+        $rootRole = $user->rolesInstitucion()
             ->whereNull('institution_id')
-            ->whereHas('role', function ($q) {
+            ->whereHas('rol', function ($q) {
                 $q->where('slug', 'root');
             })
-            ->with('role')
+            ->with('rol')
             ->first();
 
         if ($rootRole) {
             return response()->json([
                 'user' => [
                     'id' => $user->id,
-                    'full_name' => "{$user->first_name} {$user->last_name_1}",
+                    'full_name' => $user->nombre_completo,
                     'avatar_url' => $user->avatar_url,
                     'email' => $user->email,
                 ],
@@ -124,30 +125,30 @@ public function userContext(Request $request)
     }
 
     // 4. Buscar el rol (normal para otros usuarios)
-    $activeRole = $user->institutionRoles()
+    $activeRole = $user->rolesInstitucion()
         ->where('institution_id', $institution->id)
         ->where('assignment_status', 'ACTIVE')
-        ->with('role')
+        ->with('rol')
         ->first();
 
     return response()->json([
         'user' => [
             'id' => $user->id,
-            'full_name' => "{$user->first_name} {$user->last_name_1}",
+            'full_name' => $user->nombre_completo,
             'avatar_url' => $user->avatar_url,
             'email' => $user->email,
         ],
         'context' => [
-            'institution_name' => $institution->legal_name ?? $institution->short_name,
-            'role_slug' => $activeRole->role->slug ?? 'no-role',
-            'branding' => $institution->branding_colors,
+            'institution_name' => $institution->nombre_legal ?? $institution->nombre_corto,
+            'role_slug' => $activeRole->rol->slug ?? 'no-role',
+            'branding' => $institution->colores_marca,
         ],
-        'redirect_to' => $this->calculateRedirect($activeRole->role->slug ?? null)
+        'redirect_to' => $this->calculateRedirect($activeRole->rol->slug ?? null)
     ]);
 }
 
 /**
- * Lógica simple para ayudar a Angular a decidir la ruta inicial 
+ * Lógica simple para ayudar a Angular a decidir la ruta inicial
  */
 private function calculateRedirect(?string $slug): string
 {

@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Api\Root;
 
 use App\Http\Controllers\Controller;
-use App\Models\FormationArea;
+use App\Models\Area;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class FormationAreaController extends Controller
+class AreaController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): JsonResponse
     {
-        $query = FormationArea::with('educationalLevel');
+        $query = Area::with('nivel');
 
         if ($request->has('educational_level_id')) {
             $query->where('educational_level_id', $request->educational_level_id);
@@ -36,8 +36,8 @@ class FormationAreaController extends Controller
             'is_mandatory' => 'required|boolean'
         ]);
 
-        $area = FormationArea::create($data);
-        return response()->json($area->load('educationalLevel'), 201);
+        $area = Area::create($data);
+        return response()->json($area->load('nivel'), 201);
     }
 
     /**
@@ -45,7 +45,7 @@ class FormationAreaController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $area = FormationArea::with('educationalLevel')->findOrFail($id);
+        $area = Area::with('nivel')->findOrFail($id);
         return response()->json($area);
     }
 
@@ -54,8 +54,8 @@ class FormationAreaController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        $area = FormationArea::findOrFail($id);
-        
+        $area = Area::findOrFail($id);
+
         $data = $request->validate([
             'educational_level_id' => 'sometimes|required|uuid|exists:core.educational_levels,id',
             'name' => 'sometimes|required|string|max:255',
@@ -65,7 +65,7 @@ class FormationAreaController extends Controller
         ]);
 
         $area->update($data);
-        return response()->json($area->load('educationalLevel'));
+        return response()->json($area->load('nivel'));
     }
 
     /**
@@ -73,7 +73,7 @@ class FormationAreaController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $area = FormationArea::findOrFail($id);
+        $area = Area::findOrFail($id);
         $area->delete();
         return response()->json(null, 204);
     }

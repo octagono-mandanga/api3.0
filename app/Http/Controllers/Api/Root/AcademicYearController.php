@@ -3,19 +3,19 @@
 namespace App\Http\Controllers\Api\Root;
 
 use App\Http\Controllers\Controller;
-use App\Models\AcademicYear;
+use App\Models\Lectivo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class AcademicYearController extends Controller
+class LectivoController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): JsonResponse
     {
-        $query = AcademicYear::with('educationalLevel');
+        $query = Lectivo::with('nivel');
 
         if ($request->has('educational_level_id')) {
             $query->where('educational_level_id', $request->educational_level_id);
@@ -38,9 +38,9 @@ class AcademicYearController extends Controller
 
         return DB::transaction(function () use ($data) {
             $this->handleStatusTransitions($data['educational_level_id'], $data['status']);
-            
-            $academicYear = AcademicYear::create($data);
-            return response()->json($academicYear->load('educationalLevel'), 201);
+
+            $lectivo = Lectivo::create($data);
+            return response()->json($lectivo->load('nivel'), 201);
         });
     }
 
@@ -49,8 +49,8 @@ class AcademicYearController extends Controller
      */
     public function show($id): JsonResponse
     {
-        $academicYear = AcademicYear::with('educationalLevel')->findOrFail($id);
-        return response()->json($academicYear);
+        $lectivo = Lectivo::with('nivel')->findOrFail($id);
+        return response()->json($lectivo);
     }
 
     /**
@@ -58,8 +58,8 @@ class AcademicYearController extends Controller
      */
     public function update(Request $request, $id): JsonResponse
     {
-        $academicYear = AcademicYear::findOrFail($id);
-        
+        $lectivo = Lectivo::findOrFail($id);
+
         $data = $request->validate([
             'educational_level_id' => 'sometimes|required|uuid|exists:core.educational_levels,id',
             'start_date' => 'sometimes|required|date',
@@ -67,15 +67,15 @@ class AcademicYearController extends Controller
             'status' => 'sometimes|required|string|in:active,previous,inactive'
         ]);
 
-        return DB::transaction(function () use ($academicYear, $data) {
-            $levelId = $data['educational_level_id'] ?? $academicYear->educational_level_id;
-            
-            if (isset($data['status']) && $data['status'] !== $academicYear->status) {
-                $this->handleStatusTransitions($levelId, $data['status'], $academicYear->id);
+        return DB::transaction(function () use ($lectivo, $data) {
+            $levelId = $data['educational_level_id'] ?? $lectivo->educational_level_id;
+
+            if (isset($data['status']) && $data['status'] !== $lectivo->status) {
+                $this->handleStatusTransitions($levelId, $data['status'], $lectivo->id);
             }
 
-            $academicYear->update($data);
-            return response()->json($academicYear->load('educationalLevel'));
+            $lectivo->update($data);
+            return response()->json($lectivo->load('nivel'));
         });
     }
 
@@ -84,8 +84,8 @@ class AcademicYearController extends Controller
      */
     public function destroy($id): JsonResponse
     {
-        $academicYear = AcademicYear::findOrFail($id);
-        $academicYear->delete();
+        $lectivo = Lectivo::findOrFail($id);
+        $lectivo->delete();
         return response()->json(null, 204);
     }
 
@@ -96,13 +96,13 @@ class AcademicYearController extends Controller
     {
         if ($newStatus === 'active') {
             // El previo activo pasa a anterior
-            $currentActive = AcademicYear::where('educational_level_id', $levelId)
+            $currentActive = Lectivo::where('educational_level_id', $levelId)
                 ->where('status', 'active');
-            
+
             if ($excludeId) {
                 $currentActive->where('id', '!=', $excludeId);
             }
-                
+
             $currentActive = $currentActive->first();
 
             if ($currentActive) {

@@ -3,39 +3,39 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\UserProfileService;
+use App\Services\PerfilUsuarioService;
 use Illuminate\Http\Request;
 
 class ProfileController extends Controller
 {
-    protected $profileService;
+    protected $perfilService;
 
-    public function __construct(UserProfileService $profileService)
+    public function __construct(PerfilUsuarioService $perfilService)
     {
-        $this->profileService = $profileService;
+        $this->perfilService = $perfilService;
     }
     public function show(Request $request)
 	{
 	    // El usuario ya viene en el request gracias al middleware sanctum
-	    $user = $request->user();
+	    $usuario = $request->user();
 
-	    // Cargamos la relación de cuentas sociales definida en el modelo User
-	    $user->load('socialAccounts');
+	    // Cargamos la relación de cuentas sociales definida en el modelo Usuario
+	    $usuario->load('cuentasSociales');
 
 	    return response()->json([
 	        'status' => 'success',
 	        'data' => [
 	            'personal_info' => [
-	                'id' => $user->id,
-	                'first_name' => $user->first_name,
-	                'middle_name' => $user->middle_name,
-	                'last_name_1' => $user->last_name_1,
-	                'last_name_2' => $user->last_name_2,
-	                'email' => $user->email,
-	                'avatar_url' => $user->avatar_url,
-	                'global_status' => $user->global_status,
+	                'id' => $usuario->id,
+	                'first_name' => $usuario->first_name,
+	                'middle_name' => $usuario->middle_name,
+	                'last_name_1' => $usuario->last_name_1,
+	                'last_name_2' => $usuario->last_name_2,
+	                'email' => $usuario->email,
+	                'avatar_url' => $usuario->avatar_url,
+	                'global_status' => $usuario->global_status,
 	            ],
-	            'social_accounts' => $user->socialAccounts->map(function ($account) {
+	            'social_accounts' => $usuario->cuentasSociales->map(function ($account) {
 	                return [
 	                    'provider' => $account->provider,
 	                    'provider_email' => $account->provider_email,
@@ -51,7 +51,7 @@ class ProfileController extends Controller
     }
     public function update(Request $request)
     {
-        $user = $request->user();
+        $usuario = $request->user();
 
         $validated = $request->validate([
             'first_name'   => 'string|max:255',
@@ -60,7 +60,7 @@ class ProfileController extends Controller
             'social_provider' => 'nullable|string'
         ]);
 
-        $updatedUser = $this->profileService->updateProfile($user, $validated);
+        $updatedUser = $this->perfilService->actualizarPerfil($usuario, $validated);
 
         return response()->json([
             'message' => 'Perfil actualizado correctamente',
@@ -75,8 +75,8 @@ public function uploadAvatar(Request $request)
     ]);
 
     try {
-	$user = $request->user();
-        $url = $this->profileService->updateAvatar($user, $request->input('avatar'));
+	$usuario = $request->user();
+        $url = $this->perfilService->actualizarAvatar($usuario, $request->input('avatar'));
 
         return response()->json([
             'status' => 'success',
