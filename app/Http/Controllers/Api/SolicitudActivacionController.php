@@ -69,29 +69,33 @@ class SolicitudActivacionController extends Controller
             // Generar código de verificación de 6 dígitos
             $codigoEmail = $this->generarCodigo();
 
+            // Generar UUID para la solicitud (insertGetId no funciona con UUID como PK)
+            $solicitudId = (string) Str::uuid();
+
             // Crear solicitud en la base de datos
-            $solicitudId = DB::table('core.solicitudes_activacion')->insertGetId([
+            DB::table('core.solicitudes_activacion')->insert([
+                'id'                 => $solicitudId,
                 'nombre_institucion' => $validated['nombre_institucion'],
-                'correo' => $validated['correo'],
-                'telefono' => $validated['telefono'],
+                'correo'             => $validated['correo'],
+                'telefono'           => $validated['telefono'],
                 'nombre_responsable' => $validated['nombre_responsable'],
-                'documento' => $validated['documento'],
-                'codigo_email' => $codigoEmail,
-                'email_verificado' => false,
-                'sms_verificado' => false,
-                'estado' => 'pendiente_email',
-                'ip_origen' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'created_at' => now(),
-                'updated_at' => now(),
+                'documento'          => $validated['documento'],
+                'codigo_email'       => $codigoEmail,
+                'email_verificado'   => false,
+                'sms_verificado'     => false,
+                'estado'             => 'pendiente_email',
+                'ip_origen'          => $request->ip(),
+                'user_agent'         => $request->userAgent(),
+                'created_at'         => now(),
+                'updated_at'         => now(),
             ]);
 
             // Enviar código por email
             $this->enviarCodigoEmail($validated['correo'], $codigoEmail, $validated['nombre_responsable']);
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Solicitud creada. Revise su correo electrónico.',
+                'status'      => 'success',
+                'message'     => 'Solicitud creada. Revise su correo electrónico.',
                 'solicitud_id' => $solicitudId,
             ], 201);
 
