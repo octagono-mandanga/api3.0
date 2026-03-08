@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Cache;
 
 class SolicitudActivacionController extends Controller
 {
+    // Tiempo de vida del código de verificación (en minutos)
+    const CODIGO_EXPIRACION_MINUTOS = 10;
+
     protected ResendService $resendService;
     protected TwilioService $twilioService;
 
@@ -47,6 +50,22 @@ class SolicitudActivacionController extends Controller
         ]);
 
         try {
+            // Verificar si ya existe una solicitud activa para este correo (menos de 1 hora)
+            $solicitudExistente = DB::table('core.solicitudes_activacion')
+                ->where('correo', $validated['correo'])
+                ->whereIn('estado', ['pendiente_email', 'pendiente_sms'])
+                ->where('created_at', '>=', now()->subHour())
+                ->first();
+
+            if ($solicitudExistente) {
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 'SOLICITUD_EN_PROCESO',
+                    'message' => 'Ya existe una solicitud en proceso para este correo. Revise su bandeja de entrada o espere 1 hora para intentar nuevamente.',
+                    'solicitud_id' => $solicitudExistente->id,
+                ], 409);
+            }
+
             // Generar código de verificación de 6 dígitos
             $codigoEmail = $this->generarCodigo();
 
@@ -91,7 +110,7 @@ class SolicitudActivacionController extends Controller
 
     /**
      * Verifica el código enviado por email.
-     * Paso 2: Valida código y envía SMS.
+     * Paso 2: Valida código, verifica expiración y envía SMS.
      */
     public function verificarEmail(Request $request, $id)
     {
@@ -109,6 +128,16 @@ class SolicitudActivacionController extends Controller
                 'status' => 'error',
                 'message' => 'Solicitud no encontrada o ya fue procesada.',
             ], 404);
+        }
+
+        // Verificar si el código ha expirado (10 minutos desde el último updated_at)
+        $tiempoTranscurrido = now()->diffInMinutes($solicitud->updated_at);
+        if ($tiempoTranscurrido >= self::CODIGO_EXPIRACION_MINUTOS) {
+            return response()->json([
+                'status' => 'error',
+                'code' => 'CODE_EXPIRED',
+                'message' => 'El código ha expirado. Solicite un nuevo código.',
+            ], 410);
         }
 
         // Verificar intentos de código (máximo 5)
@@ -159,7 +188,7 @@ class SolicitudActivacionController extends Controller
 
     /**
      * Verifica el código enviado por SMS.
-     * Paso 3: Valida código y activa la cuenta.
+     * Paso 3: Valida código, verifica expiración y activa la cuenta.
      */
     public function verificarSms(Request $request, $id)
     {
@@ -177,6 +206,16 @@ class SolicitudActivacionController extends Controller
                 'status' => 'error',
                 'message' => 'Solicitud no encontrada o ya fue procesada.',
             ], 404);
+        }
+
+        // Verificar si el código SMS ha expirado (10 minutos desde el último updated_at)
+        $tiempoTranscurrido = now()->diffInMinutes($solicitud->updated_at);
+        if ($tiempoTranscurrido >= self::CODIGO_EXPIRACION_MINUTOS) {
+            return response()->json([
+                'status' => 'error',
+                'code' => 'CODE_EXPIRED',
+                'message' => 'El código ha expirado. Solicite un nuevo código.',
+            ], 410);
         }
 
         // Verificar intentos
@@ -221,7 +260,7 @@ class SolicitudActivacionController extends Controller
     }
 
     /**
-     * Reenvía el código de verificación por email.
+     * Reenvía el código de verificación por email (genera nuevo código y reinicia el timer).
      */
     public function reenviarCodigoEmail(Request $request, $id)
     {
@@ -237,15 +276,19 @@ class SolicitudActivacionController extends Controller
             ], 404);
         }
 
-        // Nuevo código
+        // Nuevo código — el updated_at se renueva, reiniciando el timer de expiración
         $codigoEmail = $this->generarCodigo();
 
         DB::table('core.solicitudes_activacion')
             ->where('id', $id)
             ->update([
                 'codigo_email' => $codigoEmail,
+                'estado' => 'pendiente_email',
                 'updated_at' => now(),
             ]);
+
+        // Limpiar intentos fallidos al reenviar
+        Cache::forget("solicitud:email_intentos:{$id}");
 
         $this->enviarCodigoEmail($solicitud->correo, $codigoEmail, $solicitud->nombre_responsable);
 
@@ -256,7 +299,7 @@ class SolicitudActivacionController extends Controller
     }
 
     /**
-     * Reenvía el código de verificación por SMS.
+     * Reenvía el código de verificación por SMS (genera nuevo código y reinicia el timer).
      */
     public function reenviarCodigoSms(Request $request, $id)
     {
@@ -272,7 +315,7 @@ class SolicitudActivacionController extends Controller
             ], 404);
         }
 
-        // Nuevo código
+        // Nuevo código — el updated_at se renueva, reiniciando el timer de expiración
         $codigoSms = $this->generarCodigo(4);
 
         DB::table('core.solicitudes_activacion')
@@ -281,6 +324,9 @@ class SolicitudActivacionController extends Controller
                 'codigo_sms' => $codigoSms,
                 'updated_at' => now(),
             ]);
+
+        // Limpiar intentos fallidos al reenviar
+        Cache::forget("solicitud:sms_intentos:{$id}");
 
         $this->enviarCodigoSms($solicitud->telefono, $codigoSms);
 

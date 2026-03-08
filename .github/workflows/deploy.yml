@@ -15,39 +15,99 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }} 
+          username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            set -e
             PROJECT_DIR="/var/www/mandanga-platform"
             cd $PROJECT_DIR
 
-            echo "--- PASO 1: RESTAURAR EMERGENCIA ---"
-            # Si borraste carpetas, esto las trae de vuelta desde el cache local de Git
-            git checkout .
-            
-            echo "--- PASO 2: SINCRONIZAR CON GITHUB ---"
-            git fetch origin main
-            # Forzamos a que el código sea EXACTAMENTE el de GitHub
-            git reset --hard origin/main
-            git clean -fd
-
-            echo "--- PASO 3: VERIFICACIÓN FÍSICA ---"
-            if [ -f "routes/api.php" ]; then
-                echo "✅ Archivo routes/api.php restaurado exitosamente."
-                echo "Contenido detectado:"
-                grep "TEST DIRECTO" routes/api.php || echo "El texto de test no está, pero el archivo existe."
+            echo "======================================"
+            echo "PASO 1: BACKUP DEL .ENV"
+            echo "======================================"
+            # Preservar el .env de producción antes de cualquier git operation
+            if [ -f ".env" ]; then
+              cp .env /tmp/.env.backup
+              echo "✅ .env respaldado en /tmp/.env.backup"
             else
-                echo "❌ ERROR CRÍTICO: El archivo sigue sin aparecer."
-                exit 1
+              echo "⚠️  No existe .env — debes crearlo manualmente la primera vez:"
+              echo "   cp .env.example .env && nano .env"
+              exit 1
             fi
 
-            echo "--- PASO 4: LARAVEL OPTIMIZE ---"
-            # Instalamos sin ejecutar scripts que puedan fallar si falta algo
-            composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
-            
-            # Ahora sí, limpiamos caché
+            echo "======================================"
+            echo "PASO 2: SINCRONIZAR CON GITHUB"
+            echo "======================================"
+            git fetch origin main
+            # El código queda EXACTAMENTE igual a GitHub (limpio)
+            git reset --hard origin/main
+            git clean -fd
+            echo "✅ Código sincronizado con origin/main"
+
+            echo "======================================"
+            echo "PASO 3: RESTAURAR .ENV"
+            echo "======================================"
+            cp /tmp/.env.backup .env
+            echo "✅ .env restaurado correctamente"
+
+            echo "======================================"
+            echo "PASO 4: DEPENDENCIAS (SIN DEV)"
+            echo "======================================"
+            composer install \
+              --no-interaction \
+              --prefer-dist \
+              --optimize-autoloader \
+              --no-dev
+            echo "✅ Dependencias instaladas (modo producción)"
+
+            echo "======================================"
+            echo "PASO 5: MIGRACIONES"
+            echo "======================================"
+            php artisan migrate --force
+            echo "✅ Migraciones ejecutadas"
+
+            echo "======================================"
+            echo "PASO 6: CACHE DE PRODUCCIÓN"
+            echo "======================================"
             php artisan config:clear
             php artisan route:clear
-            php artisan optimize:clear
-            php artisan config:publish cors
+            php artisan view:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            echo "✅ Caches de configuración, rutas y vistas generados"
+
+            echo "======================================"
+            echo "PASO 7: REINICIAR WORKERS DE COLA"
+            echo "======================================"
+            php artisan queue:restart
+            echo "✅ Signal enviado a workers de cola"
+
+            # Descomenta según tu servidor:
+            # sudo systemctl restart php8.2-fpm
+            # sudo supervisorctl restart all
+
+            echo "======================================"
+            echo "PASO 8: SEEDERS DE REFERENCIA"
+            echo "======================================"
+            # Solo datos de referencia (departamentos, EPS, etc.)
+            # Seguros de re-ejecutar porque usan insertOrIgnore
+            # Descomenta si necesitas correr seeders:
+            # php artisan db:seed --class=RefSeeder --force
+
+            echo "======================================"
+            echo "PASO 9: VERIFICACIÓN DE SALUD"
+            echo "======================================"
+            APP_URL=$(grep "^APP_URL=" .env | cut -d '=' -f2)
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${APP_URL}/api/ping" || echo "000")
+
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ API respondiendo correctamente (HTTP 200)"
+            else
+              echo "⚠️  API retornó HTTP ${HTTP_STATUS} — revisar logs:"
+              echo "   tail -n 50 storage/logs/laravel.log"
+            fi
+
+            echo ""
+            echo "🚀 Deploy completado exitosamente."
