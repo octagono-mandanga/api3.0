@@ -26,13 +26,11 @@ jobs:
             echo "======================================"
             echo "PASO 1: BACKUP DEL .ENV"
             echo "======================================"
-            # Preservar el .env de producción antes de cualquier git operation
             if [ -f ".env" ]; then
               cp .env /tmp/.env.backup
               echo "✅ .env respaldado en /tmp/.env.backup"
             else
-              echo "⚠️  No existe .env — debes crearlo manualmente la primera vez:"
-              echo "   cp .env.example .env && nano .env"
+              echo "⚠️  No existe .env — crea uno manualmente: cp .env.example .env && nano .env"
               exit 1
             fi
 
@@ -40,7 +38,6 @@ jobs:
             echo "PASO 2: SINCRONIZAR CON GITHUB"
             echo "======================================"
             git fetch origin main
-            # El código queda EXACTAMENTE igual a GitHub (limpio)
             git reset --hard origin/main
             git clean -fd
             echo "✅ Código sincronizado con origin/main"
@@ -54,23 +51,42 @@ jobs:
             echo "======================================"
             echo "PASO 4: DEPENDENCIAS (SIN DEV)"
             echo "======================================"
-            composer install \
-              --no-interaction \
-              --prefer-dist \
-              --optimize-autoloader \
-              --no-dev
+            composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
             echo "✅ Dependencias instaladas (modo producción)"
 
             echo "======================================"
-            echo "PASO 5: MIGRACIONES"
+            echo "PASO 5: MIGRACIONES (MODO DESARROLLO)"
             echo "======================================"
-            # MODO DESARROLLO: borra y recrea todo desde cero con seeders.
-            # Cuando pases a producción, reemplaza estas líneas por:
-            #   php artisan migrate:register-existing
-            #   php artisan migrate --force
+            # PROBLEMA: db:wipe solo borra schema 'public', ignora schemas custom.
+            # Solución: eliminar todos los schemas custom con psql antes del fresh.
+            DB_HOST=$(grep "^DB_HOST=" .env | cut -d'=' -f2 | tr -d '\r')
+            DB_PORT=$(grep "^DB_PORT=" .env | cut -d'=' -f2 | tr -d '\r')
+            DB_NAME=$(grep "^DB_DATABASE=" .env | cut -d'=' -f2 | tr -d '\r')
+            DB_USER=$(grep "^DB_USERNAME=" .env | cut -d'=' -f2 | tr -d '\r')
+            DB_PASS=$(grep "^DB_PASSWORD=" .env | cut -d'=' -f2 | tr -d '\r')
+
+            echo "→ Eliminando schemas custom en ${DB_NAME}..."
+            PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+              -c "DROP SCHEMA IF EXISTS ref CASCADE;" \
+              -c "DROP SCHEMA IF EXISTS auth CASCADE;" \
+              -c "DROP SCHEMA IF EXISTS core CASCADE;" \
+              -c "DROP SCHEMA IF EXISTS academico CASCADE;" \
+              -c "DROP SCHEMA IF EXISTS inscripcion CASCADE;" \
+              -c "DROP SCHEMA IF EXISTS evaluacion CASCADE;" \
+              -c "DROP SCHEMA IF EXISTS observador CASCADE;" \
+              -c "DROP SCHEMA IF EXISTS mensajeria CASCADE;" \
+              -c "DROP SCHEMA IF EXISTS notificacion CASCADE;" \
+              -c "DROP SCHEMA IF EXISTS horario CASCADE;" \
+              -c "DROP SCHEMA IF EXISTS auditoria CASCADE;"
+            echo "✅ Schemas eliminados"
+
             php artisan migrate:fresh --force --seed
             echo "✅ Base de datos recreada con migraciones y seeders"
 
+            # -- CAMBIO A PRODUCCIÓN --
+            # Cuando pases a producción, reemplaza el bloque de psql + migrate:fresh por:
+            #   php artisan migrate:register-existing
+            #   php artisan migrate --force
 
             echo "======================================"
             echo "PASO 6: CACHE DE PRODUCCIÓN"
@@ -81,37 +97,26 @@ jobs:
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
-            echo "✅ Caches de configuración, rutas y vistas generados"
+            echo "✅ Caches generados"
 
             echo "======================================"
             echo "PASO 7: REINICIAR WORKERS DE COLA"
             echo "======================================"
             php artisan queue:restart
             echo "✅ Signal enviado a workers de cola"
-
             # Descomenta según tu servidor:
             # sudo systemctl restart php8.2-fpm
             # sudo supervisorctl restart all
 
             echo "======================================"
-            echo "PASO 8: SEEDERS DE REFERENCIA"
+            echo "PASO 8: VERIFICACIÓN DE SALUD"
             echo "======================================"
-            # Solo datos de referencia (departamentos, EPS, etc.)
-            # Seguros de re-ejecutar porque usan insertOrIgnore
-            # Descomenta si necesitas correr seeders:
-            # php artisan db:seed --class=RefSeeder --force
-
-            echo "======================================"
-            echo "PASO 9: VERIFICACIÓN DE SALUD"
-            echo "======================================"
-            APP_URL=$(grep "^APP_URL=" .env | cut -d '=' -f2)
+            APP_URL=$(grep "^APP_URL=" .env | cut -d'=' -f2 | tr -d '\r')
             HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${APP_URL}/api/ping" || echo "000")
-
             if [ "$HTTP_STATUS" = "200" ]; then
               echo "✅ API respondiendo correctamente (HTTP 200)"
             else
-              echo "⚠️  API retornó HTTP ${HTTP_STATUS} — revisar logs:"
-              echo "   tail -n 50 storage/logs/laravel.log"
+              echo "⚠️  API retornó HTTP ${HTTP_STATUS} — revisar: tail -n 50 storage/logs/laravel.log"
             fi
 
             echo ""
