@@ -64,8 +64,13 @@ jobs:
             echo "======================================"
             echo "PASO 5: MIGRACIONES"
             echo "======================================"
-            php artisan migrate --force
-            echo "✅ Migraciones ejecutadas"
+            # MODO DESARROLLO: borra y recrea todo desde cero con seeders.
+            # Cuando pases a producción, reemplaza estas líneas por:
+            #   php artisan migrate:register-existing
+            #   php artisan migrate --force
+            php artisan migrate:fresh --force --seed
+            echo "✅ Base de datos recreada con migraciones y seeders"
+
 
             echo "======================================"
             echo "PASO 6: CACHE DE PRODUCCIÓN"
