@@ -38,7 +38,7 @@ Route::get('/ping', function() { return response()->json(['status' => 'ok', 'tim
 Route::post('/login', [AuthController::class, 'login']);
 Route::apiResource('instituciones', InstitucionController::class);
 
-// Datos de referencia (sin autenticación, usados en el wizard de configuración)
+// Datos de referencia (sin autenticción, usados en el wizard de configuración)
 Route::prefix('ref')->group(function () {
     Route::get('/departamentos', [RefController::class, 'departamentos']);
     Route::get('/municipios', [RefController::class, 'municipios']);
