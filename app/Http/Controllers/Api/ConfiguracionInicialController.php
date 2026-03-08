@@ -32,25 +32,30 @@ class ConfiguracionInicialController extends Controller
             $validated = $request->validate([
                 // Institución
                 'institucion' => 'nullable|array',
-                'institucion.nombre_corto' => 'nullable|string|max:100',
-                'institucion.codigo_dane' => 'nullable|string|max:20',
-                'institucion.nit' => 'nullable|string|max:20',
-                'institucion.naturaleza' => 'nullable|string|in:oficial,privado,concesion,cooperativo',
-                'institucion.departamento' => 'nullable|string',
-                'institucion.municipio' => 'nullable|string',
-                'institucion.direccion' => 'nullable|string|max:255',
-                'institucion.telefono' => 'nullable|string|max:20',
-                'institucion.email' => 'nullable|email|max:100',
+                'institucion.nombre_legal'   => 'nullable|string|max:200',
+                'institucion.nombre_corto'   => 'nullable|string|max:100',
+                'institucion.codigo_dane'    => 'nullable|string|max:20',
+                'institucion.nit'            => 'nullable|string|max:20',
+                'institucion.naturaleza'     => 'nullable|string|in:oficial,privado,concesion,cooperativo',
+                'institucion.departamento'   => 'nullable|integer',   // ref.departamentos.id
+                'institucion.municipio'      => 'nullable|integer',   // ref.municipios.id
+                'institucion.direccion'      => 'nullable|string|max:255',
+                'institucion.telefono'       => 'nullable|string|max:20',
+                'institucion.email'          => 'nullable|email|max:100',
+                'institucion.sitio_web'      => 'nullable|url|max:255',
                 'institucion.color_primario' => 'nullable|string|max:7',
                 'institucion.color_secundario' => 'nullable|string|max:7',
 
                 // Sede principal
                 'sede_principal' => 'nullable|array',
-                'sede_principal.nombre' => 'nullable|string|max:100',
-                'sede_principal.codigo' => 'nullable|string|max:20',
-                'sede_principal.direccion' => 'nullable|string|max:255',
-                'sede_principal.telefono' => 'nullable|string|max:20',
+                'sede_principal.nombre'       => 'nullable|string|max:100',
+                'sede_principal.codigo'       => 'nullable|string|max:20',
+                'sede_principal.municipio_id' => 'nullable|integer',  // ref.municipios.id
+                'sede_principal.direccion'    => 'nullable|string|max:255',
+                'sede_principal.telefono'     => 'nullable|string|max:20',
                 'sede_principal.es_principal' => 'nullable|boolean',
+                'sede_principal.latitud'      => 'nullable|numeric|between:-90,90',
+                'sede_principal.longitud'     => 'nullable|numeric|between:-180,180',
 
                 // Sedes adicionales
                 'sedes_adicionales' => 'nullable|array',

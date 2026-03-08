@@ -93,15 +93,18 @@ class ConfiguracionInicialService
     protected function actualizarInstitucion(Institucion $institucion, array $datos): Institucion
     {
         $institucion->update([
-            'nombre_corto' => $datos['nombre_corto'] ?? $institucion->nombre_corto,
-            'codigo_dane' => $datos['codigo_dane'] ?? $institucion->codigo_dane,
-            'nit' => $datos['nit'] ?? $institucion->nit,
+            'nombre_legal'  => $datos['nombre_legal'] ?? $institucion->nombre_legal,
+            'nombre_corto'  => $datos['nombre_corto'] ?? $institucion->nombre_corto,
+            'codigo_dane'   => $datos['codigo_dane'] ?? $institucion->codigo_dane,
+            'nit'           => $datos['nit'] ?? $institucion->nit,
             'tipo_institucion' => $datos['naturaleza'] ?? $institucion->tipo_institucion,
-            'direccion' => $datos['direccion'] ?? $institucion->direccion,
-            'telefono' => $datos['telefono'] ?? $institucion->telefono,
+            'municipio_id'  => $datos['municipio'] ?? $institucion->municipio_id,
+            'direccion'     => $datos['direccion'] ?? $institucion->direccion,
+            'telefono'      => $datos['telefono'] ?? $institucion->telefono,
             'email_oficial' => $datos['email'] ?? $institucion->email_oficial,
+            'sitio_web'     => $datos['sitio_web'] ?? $institucion->sitio_web,
             'colores_marca' => [
-                'primary' => $datos['color_primario'] ?? '#1e40af',
+                'primary'   => $datos['color_primario'] ?? '#1e40af',
                 'secondary' => $datos['color_secundario'] ?? '#059669',
             ],
         ]);
@@ -116,12 +119,15 @@ class ConfiguracionInicialService
     {
         return Sede::create([
             'institucion_id' => $institucion->id,
-            'nombre' => $datos['nombre'],
-            'codigo' => $datos['codigo'] ?? Str::upper(Str::slug($datos['nombre'], '_')),
-            'direccion' => $datos['direccion'] ?? null,
-            'telefono' => $datos['telefono'] ?? null,
-            'es_principal' => $datos['es_principal'] ?? false,
-            'estado' => 'activo',
+            'nombre'         => $datos['nombre'],
+            'codigo'         => $datos['codigo'] ?? Str::upper(Str::slug($datos['nombre'], '_')),
+            'municipio_id'   => $datos['municipio_id'] ?? null,
+            'direccion'      => $datos['direccion'] ?? null,
+            'telefono'       => $datos['telefono'] ?? null,
+            'latitud'        => $datos['latitud'] ?? null,
+            'longitud'       => $datos['longitud'] ?? null,
+            'es_principal'   => $datos['es_principal'] ?? false,
+            'estado'         => 'activo',
         ]);
     }
 

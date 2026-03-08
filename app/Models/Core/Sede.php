@@ -19,14 +19,18 @@ class Sede extends Model
         'es_principal',
         'direccion',
         'telefono',
+        'latitud',
+        'longitud',
         'estado',
     ];
 
     protected $casts = [
         'municipio_id' => 'integer',
         'es_principal' => 'boolean',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'latitud'      => 'decimal:8',
+        'longitud'     => 'decimal:8',
+        'created_at'   => 'datetime',
+        'updated_at'   => 'datetime',
     ];
 
     public function institucion()
