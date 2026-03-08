@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('academico.asignaturas_grado', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->uuid('asignatura_id');
             $table->smallInteger('grado_id');
             $table->smallInteger('intensidad_horaria')->nullable();

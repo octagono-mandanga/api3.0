@@ -2,10 +2,13 @@
 
 namespace App\Models\Evaluacion;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class RangoEscala extends Model
 {
+    use HasUuids;
+
     protected $table = 'evaluacion.rangos_escala';
 
     protected $fillable = [

@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('academico.areas_institucion', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->uuid('institucion_id');
             $table->smallInteger('area_id');
             $table->smallInteger('nivel_id')->nullable()->comment('Si es null, aplica a todos los niveles');

@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('core.niveles_institucion', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->uuid('institucion_id');
             $table->smallInteger('nivel_id');
             $table->string('estado', 15)->default('activo');

@@ -56,10 +56,11 @@ class ResendService
         string $correo,
         string $nombreInstitucion,
         string $nombreResponsable,
-        string $urlConexion = 'https://app.octagono.co'
+        string $urlConfiguracion = '',
+        string $urlPlataforma = 'https://app.octagono.co'
     ): bool {
         try {
-            $html = $this->getEmailCuentaCreadaTemplate($nombreInstitucion, $nombreResponsable, $urlConexion);
+            $html = $this->getEmailCuentaCreadaTemplate($nombreInstitucion, $nombreResponsable, $urlConfiguracion, $urlPlataforma);
 
             Mail::html($html, function ($message) use ($correo, $nombreInstitucion) {
                 $message->from($this->fromEmail, $this->fromName)
@@ -90,7 +91,8 @@ class ResendService
     protected function getEmailCuentaCreadaTemplate(
         string $nombreInstitucion,
         string $nombreResponsable,
-        string $urlConexion
+        string $urlConfiguracion,
+        string $urlPlataforma
     ): string {
         $year = date('Y');
 
@@ -133,9 +135,9 @@ class ResendService
                             </p>
                             <p style="margin: 0 0 24px 0; color: #6b7280; font-size: 15px; line-height: 1.7;">
                                 La cuenta de la institución <strong style="color: #1f2937;">{$nombreInstitucion}</strong> ha sido
-                                registrada en Octágono mediante el proceso realizado por un
-                                <strong style="color: #4f46e5;">facilitador o implementador externo</strong>, quien llevó a cabo el
-                                registro inicial en nombre de la institución.
+                                registrada en Octágono. El proceso fue realizado por el
+                                <strong style="color: #4f46e5;">rector o representante legal</strong>, quien completó el formulario
+                                de activación institucional.
                             </p>
 
                             <!-- Important notice -->
@@ -145,6 +147,7 @@ class ResendService
                                 </p>
                                 <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.7;">
                                     Es momento de que una <strong>persona con conocimientos curriculares y administrativos</strong>
+                                    —o en su defecto un facilitador o implementador delegado por la institución—
                                     asuma la administración de la plataforma. Esta persona será responsable de configurar
                                     la estructura académica, los niveles educativos, los periodos y demás parámetros
                                     institucionales.
@@ -184,12 +187,15 @@ class ResendService
 
                             <!-- Access button -->
                             <div style="text-align: center; margin-bottom: 32px;">
-                                <a href="{$urlConexion}"
+                                <a href="{$urlConfiguracion}"
                                    style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700; letter-spacing: 0.3px; box-shadow: 0 4px 12px rgba(99,102,241,0.4);">
-                                    Ingresar a Octágono →
+                                    Ir a la configuración inicial →
                                 </a>
                                 <p style="margin: 12px 0 0 0; color: #9ca3af; font-size: 12px;">
-                                    URL de acceso: <span style="color: #4f46e5;">{$urlConexion}</span>
+                                    URL de configuración: <span style="color: #4f46e5;">{$urlConfiguracion}</span>
+                                </p>
+                                <p style="margin: 8px 0 0 0; color: #9ca3af; font-size: 12px;">
+                                    Acceso general a la plataforma: <span style="color: #4f46e5;">{$urlPlataforma}</span>
                                 </p>
                             </div>
 

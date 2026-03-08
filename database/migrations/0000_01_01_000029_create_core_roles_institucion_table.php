@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('core.roles_institucion', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->uuid('institucion_id');
             $table->smallInteger('rol_id');
             $table->string('alias', 50)->nullable(); // nombre personalizado del rol en la institución

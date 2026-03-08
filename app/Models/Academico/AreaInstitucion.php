@@ -2,12 +2,15 @@
 
 namespace App\Models\Academico;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Core\Institucion;
 use App\Models\Core\NivelEducativo;
 
 class AreaInstitucion extends Model
 {
+    use HasUuids;
+
     protected $table = 'academico.areas_institucion';
 
     protected $fillable = [

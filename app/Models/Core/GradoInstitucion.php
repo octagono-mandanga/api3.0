@@ -2,10 +2,13 @@
 
 namespace App\Models\Core;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class GradoInstitucion extends Model
 {
+    use HasUuids;
+
     protected $table = 'core.grados_institucion';
 
     protected $fillable = [

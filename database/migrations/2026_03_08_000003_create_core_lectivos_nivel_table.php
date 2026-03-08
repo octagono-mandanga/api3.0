@@ -12,7 +12,7 @@ return new class extends Migration
         // Permite configurar fechas de inicio/fin diferentes por nivel cuando
         // mismoPeriodoParaTodos = false en el frontend
         Schema::create('core.lectivos_nivel', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->uuid('lectivo_id');
             $table->smallInteger('nivel_id');
             $table->date('fecha_inicio');

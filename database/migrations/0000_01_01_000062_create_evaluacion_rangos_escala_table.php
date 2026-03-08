@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('evaluacion.rangos_escala', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->uuid('escala_id');
             $table->decimal('desde', 4, 2);
             $table->decimal('hasta', 4, 2);

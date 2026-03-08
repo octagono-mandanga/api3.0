@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('core.solicitudes_activacion', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
 
             // Datos de la institución
             $table->string('nombre_institucion');
@@ -43,7 +43,7 @@ return new class extends Migration
             $table->text('user_agent')->nullable();
 
             // Referencia a institución creada (una vez completada)
-            $table->unsignedBigInteger('institucion_id')->nullable();
+            $table->uuid('institucion_id')->nullable();
 
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();

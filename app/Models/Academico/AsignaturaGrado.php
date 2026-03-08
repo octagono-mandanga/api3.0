@@ -2,10 +2,13 @@
 
 namespace App\Models\Academico;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class AsignaturaGrado extends Model
 {
+    use HasUuids;
+
     protected $table = 'academico.asignaturas_grado';
 
     protected $fillable = [
