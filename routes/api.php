@@ -8,6 +8,7 @@ use App\Http\Middleware\IdentifyInstitution;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ConfiguracionInicialController;
 use App\Http\Controllers\Api\SolicitudActivacionController;
+use App\Http\Controllers\Api\RefController;
 
 //Root
 use App\Http\Controllers\Api\Root\InstitucionController;
@@ -36,6 +37,12 @@ Route::get('/ping', function() { return response()->json(['status' => 'ok', 'tim
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::apiResource('instituciones', InstitucionController::class);
+
+// Datos de referencia (sin autenticación, usados en el wizard de configuración)
+Route::prefix('ref')->group(function () {
+    Route::get('/departamentos', [RefController::class, 'departamentos']);
+    Route::get('/municipios', [RefController::class, 'municipios']);
+});
 
 // Configuración inicial de instituciones (sin autenticación para el wizard inicial) ++
 Route::post('/instituciones/{id}/configuracion-inicial', [ConfiguracionInicialController::class, 'store']);
