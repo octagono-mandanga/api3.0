@@ -82,7 +82,7 @@ class TwilioService
             $codigo_error = $e->getStatusCode();
             $detalle = match (true) {
                 str_contains($e->getMessage(), 'not a verified')
-                    => 'Cuenta Twilio en modo Trial: el número destino no está verificado en twilio.com/console/phone-numbers/verified',
+                    => 'Cuenta Twilio en modo Trial: el número destino no está verificado ir a twilio.com/console/phone-numbers/verified',
                 str_contains($e->getMessage(), 'cannot be the same')
                     => 'El número destino es igual al número Twilio FROM — usa un número diferente para la prueba',
                 str_contains($e->getMessage(), 'not a valid phone number')
