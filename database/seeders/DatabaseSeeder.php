@@ -19,8 +19,8 @@ class DatabaseSeeder extends Seeder
             AuthSeeder::class,
             CoreSeeder::class,
             AcademicoSeeder::class,
-            InscripcionSeeder::class,
-            EvaluacionSeeder::class,
+            //InscripcionSeeder::class,
+            //EvaluacionSeeder::class,
         ]);
     }
 }
