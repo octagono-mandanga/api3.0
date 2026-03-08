@@ -63,7 +63,7 @@ Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
     Route::delete('roles-institucion/{id}', [RolInstitucionController::class, 'destroy']);
 
     Route::post('instituciones/upload-logo', [InstitucionController::class, 'uploadLogo']);
-    Route::apiResource('instituciones', InstitucionController::class);
+    Route::apiResource('instituciones', InstitucionController::class)->names('root.instituciones');
     Route::apiResource('sedes', SedeController::class);
     Route::get('roles', [RolController::class, 'index']);
 
