@@ -84,7 +84,7 @@ class TwilioService
                 str_contains($e->getMessage(), 'not a verified')
                     => 'Cuenta Twilio en modo Trial: el número destino no está verificado ir a twilio.com/console/phone-numbers/verified',
                 str_contains($e->getMessage(), 'cannot be the same')
-                    => 'El número destino es igual al número Twilio FROM — usa un número diferente para la prueba',
+                    => 'El número destino es igual al número Twilio FROM — usa un número diferente para la prueba.',
                 str_contains($e->getMessage(), 'not a valid phone number')
                     => 'Número de teléfono con formato inválido: ' . $telefono,
                 str_contains($e->getMessage(), 'Account is not active')
