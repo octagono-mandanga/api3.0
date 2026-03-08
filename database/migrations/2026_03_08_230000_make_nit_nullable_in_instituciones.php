@@ -1,8 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 /**
  * El NIT no está disponible al momento de crear la institución desde la solicitud.
@@ -12,15 +11,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('core.instituciones', function (Blueprint $table) {
-            $table->string('nit', 20)->nullable()->unique()->change();
-        });
+        // Quitar el NOT NULL directamente en PostgreSQL
+        // (->change() intenta recrear el índice único y falla si ya existe)
+        DB::statement('ALTER TABLE "core"."instituciones" ALTER COLUMN "nit" DROP NOT NULL');
     }
 
     public function down(): void
     {
-        Schema::table('core.instituciones', function (Blueprint $table) {
-            $table->string('nit', 20)->unique()->change();
-        });
+        DB::statement('ALTER TABLE "core"."instituciones" ALTER COLUMN "nit" SET NOT NULL');
     }
 };
