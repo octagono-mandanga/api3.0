@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // Añadimos tu middleware aquí para que se ejecute siempre
 //        $middleware->append(\App\Http\Middleware\IdentifyInstitution::class);
         $middleware->statefulApi();
+
+        // Rate limiting para solicitudes
+        $middleware->alias([
+            'throttle.solicitudes' => \App\Http\Middleware\ThrottleSolicitudes::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

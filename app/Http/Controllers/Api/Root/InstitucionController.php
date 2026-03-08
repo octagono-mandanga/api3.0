@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Root;
 
 use App\Http\Controllers\Controller;
-use App\Models\Institucion;
+use App\Models\Core\Institucion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -23,7 +23,7 @@ public function store(Request $request)
     // Usamos el namespace del modelo para que Laravel resuelva correctamente el esquema.tabla
     $validated = $request->validate([
         'legal_name'       => 'required|string',
-        'nit'              => 'required|string|unique:App\Models\Institucion,nit', 
+        'nit'              => 'required|string|unique:App\Models\Institucion,nit',
         'short_name'       => 'nullable|string|max:100',
         'dane_code'        => 'nullable|string|unique:App\Models\Institucion,dane_code',
         'institution_type' => 'nullable|string',
@@ -110,7 +110,7 @@ $request->validate([
 ]);
     try {
         $institucion = Institucion::findOrFail($request->institution_id);
-        
+
         // El servicio se encarga de redimensionar a 256x256 y convertir a JPG
         $url = $this->institucionService->actualizarLogoInstitucion($institucion, $request->logo);
 
@@ -126,5 +126,5 @@ $request->validate([
             'details' => $e->getMessage()
         ], 500);
     }
-}	
+}
 }

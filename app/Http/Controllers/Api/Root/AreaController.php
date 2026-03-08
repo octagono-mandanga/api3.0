@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Root;
 
 use App\Http\Controllers\Controller;
-use App\Models\Area;
+use App\Models\Academico\AreaFormacion as Area;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -55,7 +55,7 @@ class AreaController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $area = Area::findOrFail($id);
-        
+
         $data = $request->validate([
             'educational_level_id' => 'sometimes|required|uuid|exists:core.educational_levels,id',
             'name' => 'sometimes|required|string|max:255',

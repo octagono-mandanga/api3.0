@@ -10,11 +10,9 @@ return new class extends Migration
     {
         Schema::create('ref.tipos_documento', function (Blueprint $table) {
             $table->smallInteger('id')->autoIncrement();
+            $table->string('codigo', 10)->unique();
             $table->string('nombre', 50);
-            $table->string('abreviatura', 10)->nullable();
             $table->string('estado', 15)->default('activo');
-
-            $table->unique('nombre');
         });
     }
 

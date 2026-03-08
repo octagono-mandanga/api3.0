@@ -7,6 +7,7 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Failed;
 use App\Listeners\AuthActivityListener;
 use Illuminate\Support\Facades\Event;
+use GuzzleHttp\Client;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,7 +16,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Deshabilitar verificación SSL de Guzzle en desarrollo local (Windows)
+        if ($this->app->environment('local')) {
+            $this->app->bind(Client::class, function () {
+                return new Client(['verify' => false]);
+            });
+        }
     }
 
     /**

@@ -16,6 +16,7 @@ class Perfil extends Model
         'institucion_id',
         'sede_id',
         'rol_id',
+        'cargo',
         'es_principal',
         'estado',
     ];

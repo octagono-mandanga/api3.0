@@ -23,9 +23,13 @@ return new class extends Migration
 
             $table->foreign('conversacion_id')->references('id')->on('mensajeria.conversaciones')->onDelete('cascade');
             $table->foreign('remitente_id')->references('id')->on('auth.usuarios');
-            $table->foreign('mensaje_padre_id')->references('id')->on('mensajeria.mensajes')->onDelete('set null');
 
             $table->index(['conversacion_id', 'fecha_envio']);
+        });
+
+        // FK auto-referencial debe agregarse después de crear la tabla
+        Schema::table('mensajeria.mensajes', function (Blueprint $table) {
+            $table->foreign('mensaje_padre_id')->references('id')->on('mensajeria.mensajes')->onDelete('set null');
         });
     }
 

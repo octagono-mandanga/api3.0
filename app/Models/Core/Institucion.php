@@ -97,6 +97,21 @@ class Institucion extends Model
         return $this->hasMany(\App\Models\Academico\Asignatura::class, 'institucion_id');
     }
 
+    public function areasInstitucion()
+    {
+        return $this->hasMany(\App\Models\Academico\AreaInstitucion::class, 'institucion_id');
+    }
+
+    public function areasFormacion()
+    {
+        return $this->belongsToMany(
+            \App\Models\Academico\AreaFormacion::class,
+            'academico.areas_institucion',
+            'institucion_id',
+            'area_id'
+        )->withPivot('nivel_id', 'estado')->withTimestamps();
+    }
+
     public function competencias()
     {
         return $this->hasMany(\App\Models\Academico\Competencia::class, 'institucion_id');

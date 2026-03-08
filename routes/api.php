@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Middleware\IdentifyInstitution;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\ConfiguracionInicialController;
+use App\Http\Controllers\Api\SolicitudActivacionController;
 
 //Root
 use App\Http\Controllers\Api\Root\InstitucionController;
@@ -16,6 +18,17 @@ use App\Http\Controllers\Api\Root\NivelController;
 use App\Http\Controllers\Api\Root\GradoController;
 use App\Http\Controllers\Api\Root\AreaController;
 use App\Http\Controllers\Api\Root\LectivoController;
+use App\Http\Controllers\Api\Root\AuditoriaController;
+
+// Página por defecto de la API
+Route::get('/', function() {
+    return response()->json([
+        'name' => config('app.name', 'API'),
+        'version' => '3.0',
+        'status' => 'running',
+        'timestamp' => now()->toIso8601String()
+    ]);
+});
 
 //Route::post('/login', [AuthController::class, 'login'])->middleware(IdentifyInstitution::class);
 Route::get('/ping', function() { return response()->json(['status' => 'ok', 'time' => now()]); });
@@ -27,6 +40,12 @@ Route::get('/clear-route-cache', function() {
 });
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::apiResource('instituciones', InstitucionController::class);
+
+// Configuración inicial de instituciones (sin autenticación para el wizard inicial)
+Route::post('/instituciones/{id}/configuracion-inicial', [ConfiguracionInicialController::class, 'store']);
+Route::post('/instituciones/{id}/configuracion-completada', [ConfiguracionInicialController::class, 'marcarCompletada']);
+Route::get('/usuarios/buscar', [ConfiguracionInicialController::class, 'buscarUsuario']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -82,4 +101,32 @@ Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
 
     Route::apiResource('areas', AreaController::class);
     Route::apiResource('lectivos', LectivoController::class);
+
+    // Auditoría
+    Route::get('auditoria/online-users', [AuditoriaController::class, 'getOnlineUsers']);
+    Route::get('auditoria/access-logs', [AuditoriaController::class, 'getAccessLogs']);
+});
+
+// =====================================================
+// SOLICITUDES DE ACTIVACIÓN (públicas, con rate limiting)
+// =====================================================
+Route::prefix('solicitudes')->middleware('throttle.solicitudes:general')->group(function () {
+    // Crear solicitud (paso 1) - limitado a 3 por hora
+    Route::post('/', [SolicitudActivacionController::class, 'crear'])
+        ->middleware('throttle.solicitudes:crear');
+
+    // Verificar código email (paso 2)
+    Route::post('/{id}/verificar-email', [SolicitudActivacionController::class, 'verificarEmail'])
+        ->middleware('throttle.solicitudes:codigo');
+
+    // Verificar código SMS (paso 3)
+    Route::post('/{id}/verificar-sms', [SolicitudActivacionController::class, 'verificarSms'])
+        ->middleware('throttle.solicitudes:codigo');
+
+    // Reenviar códigos
+    Route::post('/{id}/reenviar-email', [SolicitudActivacionController::class, 'reenviarCodigoEmail'])
+        ->middleware('throttle.solicitudes:reenviar');
+
+    Route::post('/{id}/reenviar-sms', [SolicitudActivacionController::class, 'reenviarCodigoSms'])
+        ->middleware('throttle.solicitudes:reenviar');
 });

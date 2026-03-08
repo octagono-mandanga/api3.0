@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\Institucion;
+use App\Models\Core\Institucion;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Support\Facades\Log;

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\Root;
 
 use App\Http\Controllers\Controller;
-use App\Models\RolInstitucion;
-use App\Models\Rol;
+use App\Models\Core\RolInstitucion;
+use App\Models\Auth\Rol;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -71,7 +71,7 @@ class RolInstitucionController extends Controller
     {
         try {
             $isEnabled = $request->input('is_enabled') ?? $request->input('is_active');
-            
+
             if (is_null($isEnabled)) {
                 return response()->json([
                     'status' => 'error',
@@ -115,7 +115,7 @@ class RolInstitucionController extends Controller
     {
         try {
             $isEnabled = $request->input('is_enabled') ?? $request->input('is_active');
-            
+
             if (is_null($isEnabled)) {
                 return response()->json([
                     'status' => 'error',

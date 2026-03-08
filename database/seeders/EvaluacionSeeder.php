@@ -29,14 +29,15 @@ class EvaluacionSeeder extends Seeder
         if (!$lectivo) return;
 
         // Escala de calificación colombiana (1.0 - 5.0)
-        // Campos EscalaCalificacion: institucion_id, nombre, nota_minima, nota_maxima, nota_aprobacion, usa_decimales, es_default, estado
+        // Campos EscalaCalificacion: institucion_id, nombre, nota_minima, nota_maxima, nota_aprobatoria, usa_decimales, decimales, es_default, estado
         $escala = EscalaCalificacion::create([
             'institucion_id' => $institucion->id,
             'nombre' => 'Escala Nacional 1.0 - 5.0',
             'nota_minima' => 1.0,
             'nota_maxima' => 5.0,
-            'nota_aprobacion' => 3.0,
+            'nota_aprobatoria' => 3.0,
             'usa_decimales' => true,
+            'decimales' => 1,
             'es_default' => true,
             'estado' => 'activo',
         ]);

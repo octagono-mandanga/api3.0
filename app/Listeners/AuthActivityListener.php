@@ -2,8 +2,8 @@
 
 namespace App\Listeners;
 
-use App\Models\RegistroAcceso;
-use App\Models\SesionActiva;
+use App\Models\Auditoria\RegistroAcceso;
+use App\Models\Auditoria\SesionActiva;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Support\Facades\Request;

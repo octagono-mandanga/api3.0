@@ -63,6 +63,9 @@ return [
 
         'resend' => [
             'transport' => 'resend',
+            'client' => [
+                'verify' => env('MAIL_VERIFY_SSL', true),
+            ],
         ],
 
         'sendmail' => [

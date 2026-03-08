@@ -7,18 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Municipio extends Model
 {
     protected $table = 'ref.municipios';
+    public $timestamps = false;
 
     protected $fillable = [
         'departamento_id',
-        'nombre',
         'codigo',
+        'nombre',
         'estado',
     ];
 
     protected $casts = [
         'departamento_id' => 'integer',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
     public function departamento()

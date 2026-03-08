@@ -28,9 +28,16 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Typically we don't drop schemas if they might contain other data
-        // But for a full rollback:
-        // DB::statement('DROP SCHEMA IF EXISTS core CASCADE');
-        // DB::statement('DROP SCHEMA IF EXISTS auth CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS auditoria CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS horario CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS notificacion CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS mensajeria CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS observador CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS evaluacion CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS inscripcion CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS academico CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS core CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS auth CASCADE');
+        DB::statement('DROP SCHEMA IF EXISTS ref CASCADE');
     }
 };

@@ -54,4 +54,30 @@ class Lectivo extends Model
     {
         return $this->hasMany(\App\Models\Horario\Horario::class, 'lectivo_id');
     }
+
+    public function lectivosNivel()
+    {
+        return $this->hasMany(LectivoNivel::class, 'lectivo_id');
+    }
+
+    /**
+     * Obtiene las fechas del lectivo para un nivel específico.
+     * Si existe configuración por nivel, la retorna; si no, retorna las fechas generales.
+     */
+    public function getFechasParaNivel($nivelId)
+    {
+        $lectivoNivel = $this->lectivosNivel()->where('nivel_id', $nivelId)->first();
+
+        if ($lectivoNivel) {
+            return [
+                'fecha_inicio' => $lectivoNivel->fecha_inicio,
+                'fecha_fin' => $lectivoNivel->fecha_fin,
+            ];
+        }
+
+        return [
+            'fecha_inicio' => $this->fecha_inicio,
+            'fecha_fin' => $this->fecha_fin,
+        ];
+    }
 }

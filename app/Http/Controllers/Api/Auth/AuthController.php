@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Usuario;
-use App\Models\Institucion;
+use App\Models\Auth\Usuario;
+use App\Models\Core\Institucion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 

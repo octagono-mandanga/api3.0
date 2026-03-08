@@ -7,16 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class Discapacidad extends Model
 {
     protected $table = 'ref.discapacidades';
+    public $timestamps = false;
 
     protected $fillable = [
-        'nombre',
         'codigo',
+        'nombre',
         'estado',
-    ];
-
-    protected $casts = [
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
     public function usuarios()

@@ -30,4 +30,14 @@ class NivelEducativo extends Model
     {
         return $this->hasMany(NivelInstitucion::class, 'nivel_id');
     }
+
+    public function lectivosNivel()
+    {
+        return $this->hasMany(LectivoNivel::class, 'nivel_id');
+    }
+
+    public function areasInstitucion()
+    {
+        return $this->hasMany(\App\Models\Academico\AreaInstitucion::class, 'nivel_id');
+    }
 }

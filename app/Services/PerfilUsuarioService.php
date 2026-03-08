@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Usuario;
-use App\Models\CuentaSocialUsuario;
+use App\Models\Auth\Usuario;
+use App\Models\Auth\IdentidadExterna as CuentaSocialUsuario;
 use Illuminate\Support\Facades\DB;
 use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Support\Facades\Storage;

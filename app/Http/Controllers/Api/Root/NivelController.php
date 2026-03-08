@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\Root;
 
 use App\Http\Controllers\Controller;
-use App\Models\Nivel;
-use App\Models\NivelInstitucion;
+use App\Models\Core\NivelEducativo as Nivel;
+use App\Models\Core\NivelInstitucion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\Root;
 
 use App\Http\Controllers\Controller;
-use App\Models\RegistroAcceso;
-use App\Models\SesionActiva;
+use App\Models\Auditoria\RegistroAcceso;
+use App\Models\Auditoria\SesionActiva;
 use Illuminate\Http\Request;
 
 class AuditoriaController extends Controller

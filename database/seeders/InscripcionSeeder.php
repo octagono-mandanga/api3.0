@@ -90,6 +90,8 @@ class InscripcionSeeder extends Seeder
                     $directorId = $docentesUsuarioIds->isNotEmpty() ? $docentesUsuarioIds->random() : null;
 
                     // Campos Curso: institucion_id, sede_id, lectivo_id, grado_id, jornada_id, nombre, codigo, director_id, capacidad, aula, estado
+                    // codigo debe ser único por institución+lectivo, incluimos sede
+                    $codigoSede = strtoupper(substr($sede->codigo ?? $sede->nombre, 0, 3));
                     $curso = Curso::create([
                         'institucion_id' => $institucion->id,
                         'sede_id' => $sede->id,
@@ -97,7 +99,7 @@ class InscripcionSeeder extends Seeder
                         'grado_id' => $gradoInst->grado_id,
                         'jornada_id' => 1, // Mañana
                         'nombre' => "{$gradoInst->grado->nombre} {$seccion}",
-                        'codigo' => "{$gradoInst->grado->codigo}-{$seccion}",
+                        'codigo' => "{$codigoSede}-{$gradoInst->grado->codigo}-{$seccion}",
                         'director_id' => $directorId,
                         'capacidad' => $estudiantesPorCurso + 5,
                         'aula' => "Aula " . fake()->numberBetween(101, 305),

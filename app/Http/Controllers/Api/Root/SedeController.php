@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Root;
 
 use App\Http\Controllers\Controller;
-use App\Models\Sede;
+use App\Models\Core\Sede;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('ref.etnias', function (Blueprint $table) {
             $table->smallInteger('id')->autoIncrement();
-            $table->string('nombre', 50);
+            $table->string('nombre', 100);
             $table->string('codigo', 10)->nullable();
             $table->string('estado', 15)->default('activo');
 

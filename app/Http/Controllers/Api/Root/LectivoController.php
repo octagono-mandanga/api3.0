@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Root;
 
 use App\Http\Controllers\Controller;
-use App\Models\Lectivo;
+use App\Models\Core\Lectivo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -38,7 +38,7 @@ class LectivoController extends Controller
 
         return DB::transaction(function () use ($data) {
             $this->handleStatusTransitions($data['educational_level_id'], $data['status']);
-            
+
             $lectivo = Lectivo::create($data);
             return response()->json($lectivo->load('nivel'), 201);
         });
@@ -59,7 +59,7 @@ class LectivoController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $lectivo = Lectivo::findOrFail($id);
-        
+
         $data = $request->validate([
             'educational_level_id' => 'sometimes|required|uuid|exists:core.educational_levels,id',
             'start_date' => 'sometimes|required|date',
@@ -69,7 +69,7 @@ class LectivoController extends Controller
 
         return DB::transaction(function () use ($lectivo, $data) {
             $levelId = $data['educational_level_id'] ?? $lectivo->educational_level_id;
-            
+
             if (isset($data['status']) && $data['status'] !== $lectivo->status) {
                 $this->handleStatusTransitions($levelId, $data['status'], $lectivo->id);
             }
@@ -98,11 +98,11 @@ class LectivoController extends Controller
             // El previo activo pasa a anterior
             $currentActive = Lectivo::where('educational_level_id', $levelId)
                 ->where('status', 'active');
-            
+
             if ($excludeId) {
                 $currentActive->where('id', '!=', $excludeId);
             }
-                
+
             $currentActive = $currentActive->first();
 
             if ($currentActive) {

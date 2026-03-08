@@ -20,6 +20,15 @@ return [
 
     'resend' => [
         'key' => env('RESEND_API_KEY'),
+        'from_email' => env('RESEND_FROM_EMAIL', 'verificacion@octagono.app'),
+        'from_name' => env('RESEND_FROM_NAME', 'Octágono'),
+    ],
+
+    'twilio' => [
+        'sid' => env('TWILIO_SID'),
+        'token' => env('TWILIO_TOKEN'),
+        'from' => env('TWILIO_FROM'),
+        'brand_name' => env('TWILIO_BRAND_NAME', 'Octagono'),
     ],
 
     'ses' => [

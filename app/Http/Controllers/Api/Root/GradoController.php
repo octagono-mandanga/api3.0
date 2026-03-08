@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\Root;
 
 use App\Http\Controllers\Controller;
-use App\Models\Grado;
-use App\Models\GradoInstitucion;
+use App\Models\Core\Grado;
+use App\Models\Core\GradoInstitucion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -89,7 +89,7 @@ class GradoController extends Controller
     {
         try {
             $isEnabled = $request->input('is_enabled') ?? $request->input('is_active');
-            
+
             if (is_null($isEnabled)) {
                 return response()->json([
                     'status' => 'error',
