@@ -37,7 +37,7 @@ Route::get('/ping', function() { return response()->json(['status' => 'ok', 'tim
 Route::post('/login', [AuthController::class, 'login']);
 Route::apiResource('instituciones', InstitucionController::class);
 
-// Configuración inicial de instituciones (sin autenticación para el wizard inicial)
+// Configuración inicial de instituciones (sin autenticación para el wizard inicial) ++
 Route::post('/instituciones/{id}/configuracion-inicial', [ConfiguracionInicialController::class, 'store']);
 Route::post('/instituciones/{id}/configuracion-completada', [ConfiguracionInicialController::class, 'marcarCompletada']);
 Route::get('/usuarios/buscar', [ConfiguracionInicialController::class, 'buscarUsuario']);
