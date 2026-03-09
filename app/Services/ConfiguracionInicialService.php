@@ -119,11 +119,9 @@ class ConfiguracionInicialService
      */
     protected function actualizarInstitucion(Institucion $institucion, array $datos): Institucion
     {
-        $institucion->update([
+        $updateData = [
             'nombre_legal'  => $datos['nombre_legal'] ?? $institucion->nombre_legal,
             'nombre_corto'  => $datos['nombre_corto'] ?? $institucion->nombre_corto,
-            'codigo_dane'   => $datos['codigo_dane'] ?? $institucion->codigo_dane,
-            'nit'           => $datos['nit'] ?? $institucion->nit,
             'tipo_institucion' => $datos['naturaleza'] ?? $institucion->tipo_institucion,
             'municipio_id'  => $datos['municipio'] ?? $institucion->municipio_id,
             'direccion'     => $datos['direccion'] ?? $institucion->direccion,
@@ -134,7 +132,32 @@ class ConfiguracionInicialService
                 'primary'   => $datos['color_primario'] ?? '#1e40af',
                 'secondary' => $datos['color_secundario'] ?? '#059669',
             ],
-        ]);
+        ];
+
+        // NIT: solo actualizar si es diferente y válido (no vacío, no placeholder)
+        if (!empty($datos['nit']) && $datos['nit'] !== '1' && $datos['nit'] !== $institucion->nit) {
+            // Verificar que no exista en otra institución
+            $nitExiste = Institucion::where('nit', $datos['nit'])
+                ->where('id', '!=', $institucion->id)
+                ->exists();
+
+            if (!$nitExiste) {
+                $updateData['nit'] = $datos['nit'];
+            }
+        }
+
+        // Código DANE: solo actualizar si es diferente y válido
+        if (!empty($datos['codigo_dane']) && $datos['codigo_dane'] !== '1' && $datos['codigo_dane'] !== $institucion->codigo_dane) {
+            $codigoExiste = Institucion::where('codigo_dane', $datos['codigo_dane'])
+                ->where('id', '!=', $institucion->id)
+                ->exists();
+
+            if (!$codigoExiste) {
+                $updateData['codigo_dane'] = $datos['codigo_dane'];
+            }
+        }
+
+        $institucion->update($updateData);
 
         return $institucion->fresh();
     }
