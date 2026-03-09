@@ -86,6 +86,173 @@ class ResendService
     }
 
     /**
+     * Envía las credenciales de acceso al administrador institucional recién creado.
+     * Se llama al final del wizard de configuración inicial.
+     */
+    public function enviarBienvenidaAdministrador(
+        string $correo,
+        string $nombreCompleto,
+        string $nombreInstitucion,
+        string $passwordTemporal,
+        string $urlClienteWeb
+    ): bool {
+        try {
+            $html = $this->getEmailBienvenidaAdminTemplate(
+                $nombreCompleto,
+                $nombreInstitucion,
+                $correo,
+                $passwordTemporal,
+                $urlClienteWeb
+            );
+
+            Mail::html($html, function ($message) use ($correo, $nombreInstitucion) {
+                $message->from($this->fromEmail, $this->fromName)
+                    ->to($correo)
+                    ->subject("🎓 Bienvenido a Octágono — {$nombreInstitucion}");
+            });
+
+            Log::info('Email de bienvenida administrador enviado', [
+                'correo'            => $correo,
+                'nombre_institucion' => $nombreInstitucion,
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Error al enviar email de bienvenida administrador', [
+                'correo' => $correo,
+                'error'  => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Template HTML del email de bienvenida al administrador institucional.
+     * Incluye sus credenciales de acceso y el link al cliente web.
+     */
+    protected function getEmailBienvenidaAdminTemplate(
+        string $nombreCompleto,
+        string $nombreInstitucion,
+        string $correo,
+        string $passwordTemporal,
+        string $urlClienteWeb
+    ): string {
+        $year = date('Y');
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido a Octágono</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 40px 0;">
+                <table role="presentation" style="width: 100%; max-width: 620px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.08);">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); padding: 36px 40px; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 30px; font-weight: 700;">Octágono</h1>
+                            <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.85); font-size: 14px;">Sistema de Gestión Educativa</p>
+                        </td>
+                    </tr>
+
+                    <!-- Welcome banner -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); padding: 20px 40px; text-align: center; border-bottom: 2px solid #6ee7b7;">
+                            <p style="margin: 0; color: #065f46; font-size: 18px; font-weight: 700;">
+                                🎓 ¡Tu cuenta de administrador está lista!
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Main content -->
+                    <tr>
+                        <td style="padding: 40px 40px 24px 40px;">
+                            <p style="margin: 0 0 16px 0; color: #374151; font-size: 16px;">
+                                Hola <strong>{$nombreCompleto}</strong>,
+                            </p>
+                            <p style="margin: 0 0 28px 0; color: #6b7280; font-size: 15px; line-height: 1.7;">
+                                La configuración inicial de <strong style="color: #1f2937;">{$nombreInstitucion}</strong> en Octágono
+                                ha sido completada exitosamente. A continuación encontrará sus credenciales de acceso
+                                a la plataforma de gestión institucional.
+                            </p>
+
+                            <!-- Credentials box -->
+                            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #93c5fd; border-radius: 12px; padding: 24px 28px; margin-bottom: 28px;">
+                                <p style="margin: 0 0 16px 0; color: #1e40af; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    🔐 Sus credenciales de acceso
+                                </p>
+                                <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #4b5563; font-size: 14px; width: 90px; font-weight: 600;">Usuario:</td>
+                                        <td style="padding: 8px 0;">
+                                            <span style="background: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 5px 12px; font-family: monospace; font-size: 14px; color: #1e40af; font-weight: 600;">{$correo}</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #4b5563; font-size: 14px; font-weight: 600;">Contraseña:</td>
+                                        <td style="padding: 8px 0;">
+                                            <span style="background: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 5px 12px; font-family: monospace; font-size: 16px; color: #1e40af; font-weight: 700; letter-spacing: 2px;">{$passwordTemporal}</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Warning -->
+                            <div style="background: #fef3c7; border-left: 5px solid #f59e0b; border-radius: 0 10px 10px 0; padding: 16px 20px; margin-bottom: 28px;">
+                                <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+                                    <strong>⚠️ Importante:</strong> Esta es una contraseña temporal. Por seguridad,
+                                    le recomendamos cambiarla en su primer inicio de sesión en la plataforma.
+                                </p>
+                            </div>
+
+                            <!-- Access button -->
+                            <div style="text-align: center; margin-bottom: 32px;">
+                                <a href="{$urlClienteWeb}"
+                                   style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 10px; font-size: 16px; font-weight: 700; letter-spacing: 0.3px; box-shadow: 0 4px 12px rgba(99,102,241,0.4);">
+                                    Ingresar a la plataforma →
+                                </a>
+                                <p style="margin: 12px 0 0 0; color: #9ca3af; font-size: 12px;">
+                                    URL de acceso: <span style="color: #4f46e5;">{$urlClienteWeb}</span>
+                                </p>
+                            </div>
+
+                            <!-- Info box -->
+                            <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 16px 20px;">
+                                <p style="margin: 0; color: #0369a1; font-size: 13px; line-height: 1.6;">
+                                    <strong>ℹ️ Nota:</strong> Si tiene problemas para acceder o necesita asistencia,
+                                    comuníquese con el equipo de soporte de Octágono.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f9fafb; padding: 24px 40px; border-top: 1px solid #e5e7eb;">
+                            <p style="margin: 0; color: #9ca3af; font-size: 12px; text-align: center;">
+                                © {$year} Octágono — Sistema de Gestión Educativa<br>
+                                Este es un mensaje automático generado por la plataforma.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+HTML;
+    }
+
+    /**
      * Template HTML del email de notificación de cuenta creada.
      */
     protected function getEmailCuentaCreadaTemplate(

@@ -21,21 +21,30 @@ use Illuminate\Support\Str;
 
 class ConfiguracionInicialService
 {
+    protected ResendService $resendService;
+
+    public function __construct(ResendService $resendService)
+    {
+        $this->resendService = $resendService;
+    }
     /**
      * Procesa la configuración inicial completa de una institución.
      * Este método maneja todo el proceso en una transacción.
      */
     public function procesarConfiguracionInicial(Institucion $institucion, array $datos): array
     {
-        return DB::transaction(function () use ($institucion, $datos) {
+        // Procesamos todo en transacción EXCEPTO el envío de email.
+        // Si el email falla no debe revertir los datos ya guardados en BD.
+        $resultados = DB::transaction(function () use ($institucion, $datos) {
             $resultados = [
-                'institucion' => null,
-                'sedes' => [],
-                'responsable' => null,
-                'estructura' => null,
-                'lectivo' => null,
-                'escala' => null,
-                'areas' => [],
+                'institucion'  => null,
+                'sedes'        => [],
+                'responsable'  => null,
+                'estructura'   => null,
+                'lectivo'      => null,
+                'escala'       => null,
+                'areas'        => [],
+                'email_payload'=> null, // datos para envío posterior al commit
             ];
 
             // 1. Actualizar datos de la institución
@@ -55,9 +64,11 @@ class ConfiguracionInicialService
                 }
             }
 
-            // 4. Configurar responsable
+            // 4. Configurar responsable (devuelve payload de email si es usuario nuevo)
             if (!empty($datos['responsable'])) {
                 $resultados['responsable'] = $this->configurarResponsable($institucion, $datos['responsable']);
+                // Guardar payload de email para enviar después del commit
+                $resultados['email_payload'] = $resultados['responsable']['email_payload'] ?? null;
             }
 
             // 5. Configurar estructura académica (niveles y grados)
@@ -85,6 +96,22 @@ class ConfiguracionInicialService
 
             return $resultados;
         });
+
+        // Enviar email FUERA de la transacción para que un fallo de correo
+        // no revierta los datos ya guardados correctamente en la BD.
+        if (!empty($resultados['email_payload'])) {
+            $p = $resultados['email_payload'];
+            $this->resendService->enviarBienvenidaAdministrador(
+                $p['correo'],
+                $p['nombre_completo'],
+                $p['nombre_institucion'],
+                $p['password_temporal'],
+                $p['url_cliente_web']
+            );
+        }
+        unset($resultados['email_payload']); // No exponer datos sensibles en la respuesta
+
+        return $resultados;
     }
 
     /**
@@ -138,46 +165,70 @@ class ConfiguracionInicialService
     protected function configurarResponsable(Institucion $institucion, array $datos): array
     {
         $usuarioData = $datos['usuario'];
-        $perfilData = $datos['perfil'];
+        $perfilData  = $datos['perfil'];
+        $emailPayload = null;
 
         // Buscar o crear usuario
         $usuario = Usuario::where('email', $usuarioData['email'])->first();
 
         if (!$usuario) {
-            // Crear nuevo usuario con contraseña temporal
+            // Usuario nuevo: crear con contraseña temporal
             $passwordTemporal = Str::random(12);
             $usuario = Usuario::create([
-                'email' => $usuarioData['email'],
-                'primer_nombre' => $usuarioData['primer_nombre'],
-                'segundo_nombre' => $usuarioData['segundo_nombre'] ?? null,
+                'email'           => $usuarioData['email'],
+                'primer_nombre'   => $usuarioData['primer_nombre'],
+                'segundo_nombre'  => $usuarioData['segundo_nombre'] ?? null,
                 'primer_apellido' => $usuarioData['primer_apellido'],
-                'segundo_apellido' => $usuarioData['segundo_apellido'] ?? null,
-                'telefono' => $usuarioData['telefono'] ?? null,
-                'password' => Hash::make($passwordTemporal),
-                'estado' => 'pendiente', // Pendiente de activación
+                'segundo_apellido'=> $usuarioData['segundo_apellido'] ?? null,
+                'telefono'        => $usuarioData['telefono'] ?? null,
+                'password'        => Hash::make($passwordTemporal),
+                'estado'          => 'pendiente',
             ]);
 
-            // TODO: Enviar email de invitación con contraseña temporal
+            // Preparar payload para envío de email DESPUÉS del commit de transacción
+            $nombreCompleto = trim(implode(' ', array_filter([
+                $usuarioData['primer_nombre'],
+                $usuarioData['segundo_nombre'] ?? null,
+                $usuarioData['primer_apellido'],
+                $usuarioData['segundo_apellido'] ?? null,
+            ])));
+            $emailPayload = [
+                'correo'           => $usuarioData['email'],
+                'nombre_completo'  => $nombreCompleto,
+                'nombre_institucion'=> $institucion->nombre_legal,
+                'password_temporal' => $passwordTemporal,
+                'url_cliente_web'  => config('app.cliente_web_url', 'http://localhost:4200'),
+            ];
+        } else {
+            // Usuario existente: actualizar datos básicos si se proporcionaron
+            $usuario->update([
+                'primer_nombre'   => $usuarioData['primer_nombre'] ?? $usuario->primer_nombre,
+                'segundo_nombre'  => $usuarioData['segundo_nombre'] ?? $usuario->segundo_nombre,
+                'primer_apellido' => $usuarioData['primer_apellido'] ?? $usuario->primer_apellido,
+                'segundo_apellido'=> $usuarioData['segundo_apellido'] ?? $usuario->segundo_apellido,
+                'telefono'        => $usuarioData['telefono'] ?? $usuario->telefono,
+            ]);
         }
 
-        // Crear perfil para el usuario en esta institución
+        // Crear o actualizar perfil para el usuario en esta institución
         $perfil = Perfil::updateOrCreate(
             [
-                'usuario_id' => $usuario->id,
+                'usuario_id'     => $usuario->id,
                 'institucion_id' => $institucion->id,
             ],
             [
-                'rol_id' => $perfilData['rol_id'] ?? 2, // 2 = Coordinador/Responsable
-                'cargo' => $perfilData['cargo'],
-                'es_principal' => $perfilData['es_principal'] ?? true,
-                'estado' => 'activo',
+                'rol_id'      => $perfilData['rol_id'] ?? 2,
+                'cargo'       => $perfilData['cargo'],
+                'es_principal'=> $perfilData['es_principal'] ?? true,
+                'estado'      => 'activo',
             ]
         );
 
         return [
-            'usuario' => $usuario,
-            'perfil' => $perfil,
-            'es_nuevo' => !$usuario->wasRecentlyCreated,
+            'usuario'      => $usuario,
+            'perfil'       => $perfil,
+            'es_nuevo'     => $usuario->wasRecentlyCreated,
+            'email_payload'=> $emailPayload, // null si usuario ya existía
         ];
     }
 

@@ -57,6 +57,9 @@ return [
     // URL del frontend (landing/app) — leer de APP_FRONTEND en .env
     'frontend_url' => env('APP_FRONTEND', 'http://localhost:5173'),
 
+    // URL del cliente web institucional (Angular app) — leer de APP_CLIENTEWEB en .env
+    'cliente_web_url' => env('APP_CLIENTEWEB', 'http://localhost:4200'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
