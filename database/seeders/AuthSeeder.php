@@ -13,15 +13,16 @@ class AuthSeeder extends Seeder
     {
         // Roles del sistema
         $roles = [
-            ['nombre' => 'Super Administrador', 'codigo' => 'SUPER_ADMIN', 'descripcion' => 'Acceso total al sistema', 'es_sistema' => true, 'estado' => 'activo'],
-            ['nombre' => 'Administrador', 'codigo' => 'ADMIN', 'descripcion' => 'Administrador de institución', 'es_sistema' => true, 'estado' => 'activo'],
-            ['nombre' => 'Rector', 'codigo' => 'RECTOR', 'descripcion' => 'Rector de la institución', 'es_sistema' => false, 'estado' => 'activo'],
-            ['nombre' => 'Coordinador', 'codigo' => 'COORDINADOR', 'descripcion' => 'Coordinador académico', 'es_sistema' => false, 'estado' => 'activo'],
-            ['nombre' => 'Docente', 'codigo' => 'DOCENTE', 'descripcion' => 'Docente de la institución', 'es_sistema' => false, 'estado' => 'activo'],
-            ['nombre' => 'Director de Grupo', 'codigo' => 'DIRECTOR_GRUPO', 'descripcion' => 'Director de grupo', 'es_sistema' => false, 'estado' => 'activo'],
-            ['nombre' => 'Estudiante', 'codigo' => 'ESTUDIANTE', 'descripcion' => 'Estudiante matriculado', 'es_sistema' => false, 'estado' => 'activo'],
-            ['nombre' => 'Acudiente', 'codigo' => 'ACUDIENTE', 'descripcion' => 'Acudiente o padre de familia', 'es_sistema' => false, 'estado' => 'activo'],
-            ['nombre' => 'Secretaria', 'codigo' => 'SECRETARIA', 'descripcion' => 'Personal administrativo', 'es_sistema' => false, 'estado' => 'activo'],
+            ['nombre' => 'Super Administrador', 'codigo' => 'root', 'descripcion' => 'Acceso total al sistema', 'es_sistema' => true, 'estado' => 'activo'],
+            ['nombre' => 'Administrador', 'codigo' => 'manager', 'descripcion' => 'Administrador de institución', 'es_sistema' => true, 'estado' => 'activo'],
+            ['nombre' => 'Rector', 'codigo' => 'rector', 'descripcion' => 'Rector de la institución', 'es_sistema' => false, 'estado' => 'activo'],
+            ['nombre' => 'Coordinador', 'codigo' => 'academico', 'descripcion' => 'Coordinador académico', 'es_sistema' => false, 'estado' => 'activo'],
+            ['nombre' => 'Disciplina', 'codigo' => 'disciplina', 'descripcion' => 'Encargado de disciplina', 'es_sistema' => false, 'estado' => 'activo'],
+            ['nombre' => 'Docente', 'codigo' => 'docente', 'descripcion' => 'Docente de la institución', 'es_sistema' => false, 'estado' => 'activo'],
+            ['nombre' => 'Estudiante', 'codigo' => 'alumno', 'descripcion' => 'Estudiante matriculado', 'es_sistema' => false, 'estado' => 'activo'],
+            ['nombre' => 'Acudiente', 'codigo' => 'acudiente', 'descripcion' => 'Acudiente o padre de familia', 'es_sistema' => false, 'estado' => 'activo'],
+            ['nombre' => 'Secretaria', 'codigo' => 'secretaria', 'descripcion' => 'Personal administrativo', 'es_sistema' => false, 'estado' => 'activo'],
+
         ];
 
         foreach ($roles as $rol) {
