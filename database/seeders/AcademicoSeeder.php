@@ -157,7 +157,7 @@ class AcademicoSeeder extends Seeder
                                 'estado' => 'activo',
                             ]);
 
-                            // Crear 2-3 logros por competencia
+
                             // Campos Logro: institucion_id, competencia_id, asignatura_id, grado_id, descripcion, codigo, estado
                             $numLogros = rand(2, 3);
                             for ($i = 1; $i <= $numLogros; $i++) {
