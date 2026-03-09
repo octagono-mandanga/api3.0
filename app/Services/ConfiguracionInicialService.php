@@ -101,13 +101,25 @@ class ConfiguracionInicialService
         // no revierta los datos ya guardados correctamente en la BD.
         if (!empty($resultados['email_payload'])) {
             $p = $resultados['email_payload'];
-            $this->resendService->enviarBienvenidaAdministrador(
-                $p['correo'],
-                $p['nombre_completo'],
-                $p['nombre_institucion'],
-                $p['password_temporal'],
-                $p['url_cliente_web']
-            );
+
+            if ($p['tipo'] === 'nuevo') {
+                // Usuario nuevo: enviar credenciales de acceso
+                $this->resendService->enviarBienvenidaAdministrador(
+                    $p['correo'],
+                    $p['nombre_completo'],
+                    $p['nombre_institucion'],
+                    $p['password_temporal'],
+                    $p['url_cliente_web']
+                );
+            } else {
+                // Usuario existente: notificar asignación como admin
+                $this->resendService->enviarNotificacionAsignacionAdmin(
+                    $p['correo'],
+                    $p['nombre_completo'],
+                    $p['nombre_institucion'],
+                    $p['url_cliente_web']
+                );
+            }
         }
         unset($resultados['email_payload']); // No exponer datos sensibles en la respuesta
 
@@ -135,25 +147,28 @@ class ConfiguracionInicialService
         ];
 
         // NIT: solo actualizar si es diferente y válido (no vacío, no placeholder)
-        if (!empty($datos['nit']) && $datos['nit'] !== '1' && $datos['nit'] !== $institucion->nit) {
+        // Cast a string para evitar problemas de comparación de tipos (1 vs '1')
+        $nitValue = isset($datos['nit']) ? (string) $datos['nit'] : null;
+        if (!empty($nitValue) && $nitValue !== '1' && $nitValue !== (string) $institucion->nit) {
             // Verificar que no exista en otra institución
-            $nitExiste = Institucion::where('nit', $datos['nit'])
+            $nitExiste = Institucion::where('nit', $nitValue)
                 ->where('id', '!=', $institucion->id)
                 ->exists();
 
             if (!$nitExiste) {
-                $updateData['nit'] = $datos['nit'];
+                $updateData['nit'] = $nitValue;
             }
         }
 
         // Código DANE: solo actualizar si es diferente y válido
-        if (!empty($datos['codigo_dane']) && $datos['codigo_dane'] !== '1' && $datos['codigo_dane'] !== $institucion->codigo_dane) {
-            $codigoExiste = Institucion::where('codigo_dane', $datos['codigo_dane'])
+        $codigoDaneValue = isset($datos['codigo_dane']) ? (string) $datos['codigo_dane'] : null;
+        if (!empty($codigoDaneValue) && $codigoDaneValue !== '1' && $codigoDaneValue !== (string) $institucion->codigo_dane) {
+            $codigoExiste = Institucion::where('codigo_dane', $codigoDaneValue)
                 ->where('id', '!=', $institucion->id)
                 ->exists();
 
             if (!$codigoExiste) {
-                $updateData['codigo_dane'] = $datos['codigo_dane'];
+                $updateData['codigo_dane'] = $codigoDaneValue;
             }
         }
 
@@ -184,18 +199,29 @@ class ConfiguracionInicialService
     /**
      * Configura el responsable institucional.
      * Busca el usuario por email, si no existe lo crea.
+     * SIEMPRE envía notificación: credenciales para nuevos, aviso para existentes.
      */
     protected function configurarResponsable(Institucion $institucion, array $datos): array
     {
         $usuarioData = $datos['usuario'];
         $perfilData  = $datos['perfil'];
         $emailPayload = null;
+        $esNuevo = false;
 
         // Buscar o crear usuario
         $usuario = Usuario::where('email', $usuarioData['email'])->first();
 
+        // Construir nombre completo (usado en ambos casos)
+        $nombreCompleto = trim(implode(' ', array_filter([
+            $usuarioData['primer_nombre'],
+            $usuarioData['segundo_nombre'] ?? null,
+            $usuarioData['primer_apellido'],
+            $usuarioData['segundo_apellido'] ?? null,
+        ])));
+
         if (!$usuario) {
             // Usuario nuevo: crear con contraseña temporal
+            $esNuevo = true;
             $passwordTemporal = Str::random(12);
             $usuario = Usuario::create([
                 'email'           => $usuarioData['email'],
@@ -208,19 +234,14 @@ class ConfiguracionInicialService
                 'estado'          => 'pendiente',
             ]);
 
-            // Preparar payload para envío de email DESPUÉS del commit de transacción
-            $nombreCompleto = trim(implode(' ', array_filter([
-                $usuarioData['primer_nombre'],
-                $usuarioData['segundo_nombre'] ?? null,
-                $usuarioData['primer_apellido'],
-                $usuarioData['segundo_apellido'] ?? null,
-            ])));
+            // Payload para email de BIENVENIDA (con credenciales)
             $emailPayload = [
-                'correo'           => $usuarioData['email'],
-                'nombre_completo'  => $nombreCompleto,
+                'tipo'              => 'nuevo',
+                'correo'            => $usuarioData['email'],
+                'nombre_completo'   => $nombreCompleto,
                 'nombre_institucion'=> $institucion->nombre_legal,
                 'password_temporal' => $passwordTemporal,
-                'url_cliente_web'  => config('app.cliente_web_url', 'http://localhost:4200'),
+                'url_cliente_web'   => config('app.cliente_web_url', 'http://localhost:4200'),
             ];
         } else {
             // Usuario existente: actualizar datos básicos si se proporcionaron
@@ -231,6 +252,25 @@ class ConfiguracionInicialService
                 'segundo_apellido'=> $usuarioData['segundo_apellido'] ?? $usuario->segundo_apellido,
                 'telefono'        => $usuarioData['telefono'] ?? $usuario->telefono,
             ]);
+
+            // Usar nombre del usuario existente si no se proporcionó nuevo
+            if (empty($nombreCompleto)) {
+                $nombreCompleto = trim(implode(' ', array_filter([
+                    $usuario->primer_nombre,
+                    $usuario->segundo_nombre,
+                    $usuario->primer_apellido,
+                    $usuario->segundo_apellido,
+                ])));
+            }
+
+            // Payload para email de ASIGNACIÓN (sin credenciales)
+            $emailPayload = [
+                'tipo'              => 'existente',
+                'correo'            => $usuario->email,
+                'nombre_completo'   => $nombreCompleto,
+                'nombre_institucion'=> $institucion->nombre_legal,
+                'url_cliente_web'   => config('app.cliente_web_url', 'http://localhost:4200'),
+            ];
         }
 
         // Crear o actualizar perfil para el usuario en esta institución
@@ -250,8 +290,8 @@ class ConfiguracionInicialService
         return [
             'usuario'      => $usuario,
             'perfil'       => $perfil,
-            'es_nuevo'     => $usuario->wasRecentlyCreated,
-            'email_payload'=> $emailPayload, // null si usuario ya existía
+            'es_nuevo'     => $esNuevo,
+            'email_payload'=> $emailPayload,
         ];
     }
 
