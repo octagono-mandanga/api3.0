@@ -8,6 +8,8 @@ use Illuminate\Auth\Events\Failed;
 use App\Listeners\AuthActivityListener;
 use Illuminate\Support\Facades\Event;
 use GuzzleHttp\Client;
+use Laravel\Sanctum\Sanctum;
+use App\Models\Auth\PersonalAccessToken;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,7 +31,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Usar modelo personalizado para tokens de Sanctum (tabla auth.personal_access_tokens)
+        Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
 	Event::listen(Login::class, AuthActivityListener::class);
 	Event::listen(Failed::class, AuthActivityListener::class);
     }

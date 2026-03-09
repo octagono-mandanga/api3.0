@@ -52,6 +52,7 @@ Route::get('/usuarios/buscar', [ConfiguracionInicialController::class, 'buscarUs
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user-context', [AuthController::class, 'userContext']);
+    Route::post('/switch-role', [AuthController::class, 'switchRole']);
     //Generales
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile/update', [ProfileController::class, 'update']);
