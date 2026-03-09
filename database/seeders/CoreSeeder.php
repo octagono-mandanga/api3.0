@@ -304,8 +304,8 @@ class CoreSeeder extends Seeder
         ]);
 
         // Perfiles (campos: usuario_id, institucion_id, sede_id, rol_id, es_principal, estado)
-        $rolRector = Rol::where('codigo', 'RECTOR')->first();
-        $rolCoordinador = Rol::where('codigo', 'COORDINADOR')->first();
+        $rolRector = Rol::where('codigo', 'rector')->first();
+        $rolCoordinador = Rol::where('codigo', 'academico')->first();
 
         Perfil::create([
             'usuario_id' => $rector1->id,
