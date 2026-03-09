@@ -23,7 +23,7 @@ class AuthController extends Controller
 //	                        ->where('global_status', 'ACTIVE')
 	                        ->first();
 
-	            if (!$user || !Hash::check($credentials['password'], $user->password_hash)) {
+	            if (!$user || !Hash::check($credentials['password'], $user->password)) {
 	                return response()->json(['message' => 'Credenciales inválidas'], 401);
 	            }
 /*
