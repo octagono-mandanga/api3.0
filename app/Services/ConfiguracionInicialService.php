@@ -94,6 +94,11 @@ class ConfiguracionInicialService
             // 9. Marcar configuración como completada
             $institucion->update(['estado' => 'activo']);
 
+            // 10. Activar el usuario responsable para que pueda iniciar sesión
+            if (!empty($resultados['responsable']['usuario'])) {
+                $resultados['responsable']['usuario']->update(['estado' => 'activo']);
+            }
+
             return $resultados;
         });
 

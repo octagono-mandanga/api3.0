@@ -54,17 +54,21 @@ class AuthSeeder extends Seeder
         // Asignar rol ROOT al admin (sin institución - es global)
         $rolRoot = Rol::where('codigo', 'root')->first();
         if ($rolRoot && $admin) {
-            Perfil::firstOrCreate(
-                [
+            // Buscar perfil existente (NULL no funciona bien con firstOrCreate)
+            $perfilExistente = Perfil::where('usuario_id', $admin->id)
+                ->where('rol_id', $rolRoot->id)
+                ->whereNull('institucion_id')
+                ->first();
+
+            if (!$perfilExistente) {
+                Perfil::create([
                     'usuario_id' => $admin->id,
                     'rol_id' => $rolRoot->id,
                     'institucion_id' => null,
-                ],
-                [
                     'es_principal' => true,
                     'estado' => 'activo',
-                ]
-            );
+                ]);
+            }
         }
     }
 }

@@ -4,6 +4,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Auth\PasswordResetController;
 use App\Http\Middleware\IdentifyInstitution;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ConfiguracionInicialController;
@@ -36,6 +37,14 @@ Route::get('/ping', function() { return response()->json(['status' => 'ok', 'tim
 
 
 Route::post('/login', [AuthController::class, 'login']);
+
+// Recuperación de contraseña (público, sin autenticación)
+Route::prefix('password-reset')->group(function () {
+    Route::post('/', [PasswordResetController::class, 'requestReset']);
+    Route::post('/verify', [PasswordResetController::class, 'verifyToken']);
+    Route::post('/reset', [PasswordResetController::class, 'resetPassword']);
+});
+
 Route::apiResource('instituciones', InstitucionController::class);
 
 // Datos de referencia (sin autenticción, usados en el wizard de configuración)
