@@ -42,7 +42,7 @@ class InstitucionController extends Controller
             'nit'                       => 'sometimes|string|max:20',
             'codigo_dane'               => 'sometimes|nullable|string|max:20',
             'tipo_institucion'          => 'sometimes|nullable|string|max:50',
-            'municipio_id'              => 'sometimes|nullable|integer|exists:ref.municipios,id',
+            'municipio_id'              => 'sometimes|nullable|integer|exists:municipios,id',
             'direccion'                 => 'sometimes|nullable|string|max:150',
             'telefono'                  => 'sometimes|nullable|string|max:50',
             'sitio_web'                 => 'sometimes|nullable|string|max:150',

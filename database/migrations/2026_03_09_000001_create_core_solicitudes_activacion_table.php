@@ -20,8 +20,12 @@ return new class extends Migration
             $table->string('telefono', 20);
 
             // Datos del responsable
-            $table->string('nombre_responsable');
-            $table->string('documento', 20);
+            $table->smallInteger('tipo_documento_id')->nullable();
+            $table->string('numero_documento', 25)->nullable();
+            $table->string('primer_nombre', 50);
+            $table->string('segundo_nombre', 50)->nullable();
+            $table->string('primer_apellido', 50);
+            $table->string('segundo_apellido', 50)->nullable();
 
             // Códigos de verificación
             $table->string('codigo_email', 6)->nullable();

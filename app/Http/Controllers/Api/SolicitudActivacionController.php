@@ -65,7 +65,12 @@ class SolicitudActivacionController extends Controller
         return response()->json([
             'status'             => 'disponible',
             'nombre_institucion' => $solicitud->nombre_institucion,
-            'nombre_responsable' => $solicitud->nombre_responsable,
+            'tipo_documento_id'  => $solicitud->tipo_documento_id,
+            'numero_documento'   => $solicitud->numero_documento,
+            'primer_nombre'      => $solicitud->primer_nombre,
+            'segundo_nombre'     => $solicitud->segundo_nombre,
+            'primer_apellido'    => $solicitud->primer_apellido,
+            'segundo_apellido'   => $solicitud->segundo_apellido,
             'correo'             => $solicitud->correo,
             'telefono'           => $solicitud->telefono,
             'niveles'            => [], // Se leerán de los datos almacenados si aplica
@@ -93,8 +98,12 @@ class SolicitudActivacionController extends Controller
             'nombre_institucion' => 'required|string|max:255',
             'correo' => 'required|email|max:255',
             'telefono' => 'required|string|max:20',
-            'nombre_responsable' => 'required|string|max:255',
-            'documento' => 'required|string|max:20',
+            'tipo_documento_id' => 'nullable|integer|exists:ref.tipos_documento,id',
+            'numero_documento' => 'nullable|string|max:25',
+            'primer_nombre' => 'required|string|max:50',
+            'segundo_nombre' => 'nullable|string|max:50',
+            'primer_apellido' => 'required|string|max:50',
+            'segundo_apellido' => 'nullable|string|max:50',
         ]);
 
         try {
@@ -126,8 +135,12 @@ class SolicitudActivacionController extends Controller
                 'nombre_institucion' => $validated['nombre_institucion'],
                 'correo'             => $validated['correo'],
                 'telefono'           => $validated['telefono'],
-                'nombre_responsable' => $validated['nombre_responsable'],
-                'documento'          => $validated['documento'],
+                'tipo_documento_id'  => $validated['tipo_documento_id'] ?? null,
+                'numero_documento'   => $validated['numero_documento'] ?? null,
+                'primer_nombre'      => $validated['primer_nombre'],
+                'segundo_nombre'     => $validated['segundo_nombre'] ?? null,
+                'primer_apellido'    => $validated['primer_apellido'],
+                'segundo_apellido'   => $validated['segundo_apellido'] ?? null,
                 'codigo_email'       => $codigoEmail,
                 'email_verificado'   => false,
                 'sms_verificado'     => false,
@@ -139,7 +152,8 @@ class SolicitudActivacionController extends Controller
             ]);
 
             // Enviar código por email
-            $this->enviarCodigoEmail($validated['correo'], $codigoEmail, $validated['nombre_responsable']);
+            $nombreCompleto = trim($validated['primer_nombre'] . ' ' . $validated['primer_apellido']);
+            $this->enviarCodigoEmail($validated['correo'], $codigoEmail, $nombreCompleto);
 
             return response()->json([
                 'status'      => 'success',
@@ -308,10 +322,17 @@ class SolicitudActivacionController extends Controller
         $frontendUrl = config('app.frontend_url', 'https://app.octagono.co');
         $urlConfiguracion = "{$frontendUrl}/configuracion/{$id}";
 
+        $nombreResponsable = trim(implode(' ', array_filter([
+            $solicitud->primer_nombre,
+            $solicitud->segundo_nombre,
+            $solicitud->primer_apellido,
+            $solicitud->segundo_apellido,
+        ])));
+
         $this->resendService->enviarNotificacionCuentaCreada(
             $solicitud->correo,
             $solicitud->nombre_institucion,
-            $solicitud->nombre_responsable,
+            $nombreResponsable,
             $urlConfiguracion,
             $frontendUrl
         );
@@ -354,7 +375,8 @@ class SolicitudActivacionController extends Controller
         // Limpiar intentos fallidos al reenviar
         Cache::forget("solicitud:email_intentos:{$id}");
 
-        $this->enviarCodigoEmail($solicitud->correo, $codigoEmail, $solicitud->nombre_responsable);
+        $nombreCompleto = trim($solicitud->primer_nombre . ' ' . $solicitud->primer_apellido);
+        $this->enviarCodigoEmail($solicitud->correo, $codigoEmail, $nombreCompleto);
 
         return response()->json([
             'status' => 'success',
