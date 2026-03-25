@@ -64,8 +64,8 @@ jobs:
             echo "PASO 5: MIGRACIONES Y SEEDERS (TEMPORAL)"
             echo "======================================"
             # --- INICIO BLOQUE TEMPORAL (deshabilitar cuando la BD sea estable) ---
-            php artisan migrate:refresh --force --seed
-            echo "✅ migrate:refresh --seed ejecutado (BD recreada desde cero)"
+            php artisan migrate:fresh --force --seed
+            echo "✅ migrate:fresh --seed ejecutado (BD recreada desde cero)"
             # --- FIN BLOQUE TEMPORAL ---
 
             # --- INICIO BLOQUE PRODUCCIÓN (descomentar cuando la BD sea estable) ---
