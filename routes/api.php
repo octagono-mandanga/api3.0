@@ -139,7 +139,7 @@ Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
 // =====================================================
 // MANAGER - Rutas del administrador de institución
 // =====================================================
-Route::middleware(['auth:sanctum'])->prefix('manager')->group(function () {
+Route::middleware(['auth:sanctum'])->prefix('manager')->name('manager.')->group(function () {
     // Institución
     Route::get('institucion', [ManagerInstitucionController::class, 'show']);
     Route::put('institucion', [ManagerInstitucionController::class, 'update']);
