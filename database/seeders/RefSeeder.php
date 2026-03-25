@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Ref\TipoDocumento;
-use App\Models\Ref\Departamento;
-use App\Models\Ref\Municipio;
 use App\Models\Ref\Etnia;
 use App\Models\Ref\Discapacidad;
 use App\Models\Ref\Eps;
@@ -28,54 +26,8 @@ class RefSeeder extends Seeder
             TipoDocumento::create($tipo);
         }
 
-        // Departamentos principales de Colombia
-        $departamentos = [
-            ['codigo' => '11', 'nombre' => 'Bogotá D.C.', 'estado' => 'activo'],
-            ['codigo' => '05', 'nombre' => 'Antioquia', 'estado' => 'activo'],
-            ['codigo' => '76', 'nombre' => 'Valle del Cauca', 'estado' => 'activo'],
-            ['codigo' => '08', 'nombre' => 'Atlántico', 'estado' => 'activo'],
-            ['codigo' => '13', 'nombre' => 'Bolívar', 'estado' => 'activo'],
-            ['codigo' => '25', 'nombre' => 'Cundinamarca', 'estado' => 'activo'],
-            ['codigo' => '68', 'nombre' => 'Santander', 'estado' => 'activo'],
-            ['codigo' => '17', 'nombre' => 'Caldas', 'estado' => 'activo'],
-            ['codigo' => '66', 'nombre' => 'Risaralda', 'estado' => 'activo'],
-            ['codigo' => '54', 'nombre' => 'Norte de Santander', 'estado' => 'activo'],
-        ];
-
-        foreach ($departamentos as $depto) {
-            Departamento::create($depto);
-        }
-
-        // Municipios principales
-        $municipios = [
-            // Bogotá
-            ['departamento_id' => 1, 'codigo' => '11001', 'nombre' => 'Bogotá D.C.', 'estado' => 'activo'],
-            // Antioquia
-            ['departamento_id' => 2, 'codigo' => '05001', 'nombre' => 'Medellín', 'estado' => 'activo'],
-            ['departamento_id' => 2, 'codigo' => '05088', 'nombre' => 'Bello', 'estado' => 'activo'],
-            ['departamento_id' => 2, 'codigo' => '05360', 'nombre' => 'Itagüí', 'estado' => 'activo'],
-            ['departamento_id' => 2, 'codigo' => '05266', 'nombre' => 'Envigado', 'estado' => 'activo'],
-            // Valle del Cauca
-            ['departamento_id' => 3, 'codigo' => '76001', 'nombre' => 'Cali', 'estado' => 'activo'],
-            ['departamento_id' => 3, 'codigo' => '76109', 'nombre' => 'Buenaventura', 'estado' => 'activo'],
-            ['departamento_id' => 3, 'codigo' => '76520', 'nombre' => 'Palmira', 'estado' => 'activo'],
-            // Atlántico
-            ['departamento_id' => 4, 'codigo' => '08001', 'nombre' => 'Barranquilla', 'estado' => 'activo'],
-            ['departamento_id' => 4, 'codigo' => '08758', 'nombre' => 'Soledad', 'estado' => 'activo'],
-            // Bolívar
-            ['departamento_id' => 5, 'codigo' => '13001', 'nombre' => 'Cartagena', 'estado' => 'activo'],
-            // Cundinamarca
-            ['departamento_id' => 6, 'codigo' => '25754', 'nombre' => 'Soacha', 'estado' => 'activo'],
-            ['departamento_id' => 6, 'codigo' => '25175', 'nombre' => 'Chía', 'estado' => 'activo'],
-            ['departamento_id' => 6, 'codigo' => '25899', 'nombre' => 'Zipaquirá', 'estado' => 'activo'],
-            // Santander
-            ['departamento_id' => 7, 'codigo' => '68001', 'nombre' => 'Bucaramanga', 'estado' => 'activo'],
-            ['departamento_id' => 7, 'codigo' => '68276', 'nombre' => 'Floridablanca', 'estado' => 'activo'],
-        ];
-
-        foreach ($municipios as $mun) {
-            Municipio::create($mun);
-        }
+        // Departamentos y municipios completos de Colombia (33 dptos, ~1.122 municipios)
+        $this->call(DepartamentosMunicipiosSeeder::class);
 
         // Etnias
         $etnias = [

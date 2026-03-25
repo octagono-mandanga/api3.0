@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Auth\Usuario;
 use App\Models\Auth\Rol;
 use App\Models\Core\Perfil;
+use App\Models\Ref\Municipio;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -46,7 +47,7 @@ class AuthSeeder extends Seeder
                 'direccion' => 'Calle 100 # 10-20',
                 'fecha_nacimiento' => '1980-01-15',
                 'genero' => 'M',
-                'municipio_id' => 1, // Bogotá
+                'municipio_id' => Municipio::where('codigo', '11001')->value('id'), // Bogotá
                 'estado' => 'activo',
             ]
         );

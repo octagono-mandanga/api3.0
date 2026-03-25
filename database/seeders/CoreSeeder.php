@@ -16,6 +16,7 @@ use App\Models\Core\GradoInstitucion;
 use App\Models\Core\Perfil;
 use App\Models\Auth\Rol;
 use App\Models\Auth\Usuario;
+use App\Models\Ref\Municipio;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -23,6 +24,11 @@ class CoreSeeder extends Seeder
 {
     public function run(): void
     {
+        // Lookup de municipios por código DANE
+        $bogota = Municipio::where('codigo', '11001')->value('id');
+        $medellin = Municipio::where('codigo', '05001')->value('id');
+        $chia = Municipio::where('codigo', '25175')->value('id');
+
         // Planes de suscripción (campos: nombre, codigo, descripcion, max_usuarios, max_estudiantes, estado)
         $planBasico = Plan::create([
             'nombre' => 'Plan Básico',
@@ -112,7 +118,7 @@ class CoreSeeder extends Seeder
         //                     direccion, telefono, email_oficial, sitio_web, dominio, logo_url, portada_url, rector_id, colores_marca, estado
         $institucion1 = Institucion::create([
             'plan_id' => $planPremium->id,
-            'municipio_id' => 1, // Bogotá
+            'municipio_id' => $bogota,
             'nit' => '900123456-1',
             'codigo_dane' => '111001000001',
             'tipo_institucion' => 'privado',
@@ -128,7 +134,7 @@ class CoreSeeder extends Seeder
         // Sedes de Institución 1 (campos: institucion_id, municipio_id, nombre, codigo, es_principal, direccion, telefono, estado)
         $sede1_1 = Sede::create([
             'institucion_id' => $institucion1->id,
-            'municipio_id' => 1, // Bogotá
+            'municipio_id' => $bogota,
             'nombre' => 'Sede Principal',
             'codigo' => 'PRINCIPAL',
             'es_principal' => true,
@@ -139,7 +145,7 @@ class CoreSeeder extends Seeder
 
         $sede1_2 = Sede::create([
             'institucion_id' => $institucion1->id,
-            'municipio_id' => 1, // Bogotá
+            'municipio_id' => $bogota,
             'nombre' => 'Sede Norte',
             'codigo' => 'NORTE',
             'es_principal' => false,
@@ -150,7 +156,7 @@ class CoreSeeder extends Seeder
 
         $sede1_3 = Sede::create([
             'institucion_id' => $institucion1->id,
-            'municipio_id' => 13, // Chía (Cundinamarca)
+            'municipio_id' => $chia,
             'nombre' => 'Sede Chía',
             'codigo' => 'CHIA',
             'es_principal' => false,
@@ -164,7 +170,7 @@ class CoreSeeder extends Seeder
         // ============================================
         $institucion2 = Institucion::create([
             'plan_id' => $planBasico->id,
-            'municipio_id' => 2, // Medellín
+            'municipio_id' => $medellin,
             'nit' => '800987654-2',
             'codigo_dane' => '105001000002',
             'tipo_institucion' => 'oficial',
@@ -178,7 +184,7 @@ class CoreSeeder extends Seeder
 
         $sede2_1 = Sede::create([
             'institucion_id' => $institucion2->id,
-            'municipio_id' => 2, // Medellín
+            'municipio_id' => $medellin,
             'nombre' => 'Sede Principal',
             'codigo' => 'UNICA',
             'es_principal' => true,
@@ -278,7 +284,7 @@ class CoreSeeder extends Seeder
             'direccion' => 'Carrera 20 # 100-50',
             'fecha_nacimiento' => '1970-05-20',
             'genero' => 'F',
-            'municipio_id' => 1,
+            'municipio_id' => $bogota,
             'estado' => 'activo',
         ]);
 
@@ -299,7 +305,7 @@ class CoreSeeder extends Seeder
             'direccion' => 'Calle 85 # 15-30',
             'fecha_nacimiento' => '1975-08-15',
             'genero' => 'M',
-            'municipio_id' => 1,
+            'municipio_id' => $bogota,
             'estado' => 'activo',
         ]);
 
@@ -342,7 +348,7 @@ class CoreSeeder extends Seeder
             'direccion' => 'Carrera 70 # 30-15',
             'fecha_nacimiento' => '1968-11-10',
             'genero' => 'M',
-            'municipio_id' => 2,
+            'municipio_id' => $medellin,
             'estado' => 'activo',
         ]);
 
@@ -362,7 +368,7 @@ class CoreSeeder extends Seeder
             'direccion' => 'Calle 45 # 80-20',
             'fecha_nacimiento' => '1980-03-25',
             'genero' => 'F',
-            'municipio_id' => 2,
+            'municipio_id' => $medellin,
             'estado' => 'activo',
         ]);
 

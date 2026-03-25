@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\Manager\AreaFormacionController;
 use App\Http\Controllers\Api\Manager\PeriodoController;
 use App\Http\Controllers\Api\Manager\LectivoController as ManagerLectivoController;
 use App\Http\Controllers\Api\Manager\UsuarioController as ManagerUsuarioController;
+use App\Http\Controllers\Api\Manager\PlanController as ManagerPlanController;
 
 // Página por defecto de la API
 Route::get('/', function() {
@@ -142,6 +143,12 @@ Route::middleware(['auth:sanctum'])->prefix('manager')->group(function () {
     // Institución
     Route::get('institucion', [ManagerInstitucionController::class, 'show']);
     Route::put('institucion', [ManagerInstitucionController::class, 'update']);
+    Route::post('institucion/logo', [ManagerInstitucionController::class, 'uploadLogo']);
+    Route::post('institucion/portada', [ManagerInstitucionController::class, 'uploadPortada']);
+
+    // Planes (catálogo de referencia)
+    Route::get('planes', [ManagerPlanController::class, 'index']);
+    Route::get('planes/{id}', [ManagerPlanController::class, 'show']);
 
     // Sedes
     Route::apiResource('sedes', ManagerSedeController::class);

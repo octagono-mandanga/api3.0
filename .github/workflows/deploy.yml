@@ -48,6 +48,30 @@ jobs:
             cp /tmp/.env.backup .env
             echo "✅ .env restaurado correctamente"
 
+            echo "======================================"
+            echo "PASO 4: INSTALAR DEPENDENCIAS"
+            echo "======================================"
+            composer install --no-dev --optimize-autoloader --no-interaction
+            echo "✅ Dependencias instaladas"
+
+            # ╔════════════════════════════════════════════════════════════╗
+            # ║  ⚠️  BLOQUE TEMPORAL — MIGRATE REFRESH + SEED            ║
+            # ║  Elimina toda la BD y la recrea desde cero con seeders.   ║
+            # ║  DESHABILITAR en producción estable: comentar las 3       ║
+            # ║  líneas de artisan y descomentar el migrate normal.       ║
+            # ╚════════════════════════════════════════════════════════════╝
+            echo "======================================"
+            echo "PASO 5: MIGRACIONES Y SEEDERS (TEMPORAL)"
+            echo "======================================"
+            # --- INICIO BLOQUE TEMPORAL (deshabilitar cuando la BD sea estable) ---
+            php artisan migrate:refresh --force --seed
+            echo "✅ migrate:refresh --seed ejecutado (BD recreada desde cero)"
+            # --- FIN BLOQUE TEMPORAL ---
+
+            # --- INICIO BLOQUE PRODUCCIÓN (descomentar cuando la BD sea estable) ---
+            # php artisan migrate --force
+            # echo "✅ Migraciones incrementales ejecutadas"
+            # --- FIN BLOQUE PRODUCCIÓN ---
 
             echo "======================================"
             echo "PASO 6: CACHE DE PRODUCCIÓN"

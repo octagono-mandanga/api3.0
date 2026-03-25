@@ -13,7 +13,6 @@ class Institucion extends Model
 
     protected $fillable = [
         'plan_id',
-        'tema_id',
         'municipio_id',
         'nit',
         'codigo_dane',
@@ -35,7 +34,6 @@ class Institucion extends Model
 
     protected $casts = [
         'plan_id' => 'integer',
-        'tema_id' => 'integer',
         'municipio_id' => 'integer',
         'colores_marca' => 'array',
         'created_at' => 'datetime',
@@ -45,11 +43,6 @@ class Institucion extends Model
     public function plan()
     {
         return $this->belongsTo(Plan::class, 'plan_id');
-    }
-
-    public function tema()
-    {
-        return $this->belongsTo(Tema::class, 'tema_id');
     }
 
     public function municipio()
