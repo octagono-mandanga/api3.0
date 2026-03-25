@@ -55,18 +55,37 @@ jobs:
             echo "✅ Dependencias instaladas"
 
             # ╔════════════════════════════════════════════════════════════╗
-            # ║  ⚠️  BLOQUE TEMPORAL — MIGRATE REFRESH + SEED            ║
-            # ║  Elimina toda la BD y la recrea desde cero con seeders.   ║
-            # ║  DESHABILITAR en producción estable: comentar las 3       ║
-            # ║  líneas de artisan y descomentar el migrate normal.       ║
+            # ║  ⚠️  BLOQUE TEMPORAL — RECREAR BD DESDE CERO               ║
+            # ║  Elimina todos los schemas y recrea la BD con seeders.     ║
+            # ║  DESHABILITAR en producción estable: comentar el bloque    ║
+            # ║  temporal y descomentar el bloque producción.              ║
             # ╚════════════════════════════════════════════════════════════╝
             echo "======================================"
             echo "PASO 5: MIGRACIONES Y SEEDERS (TEMPORAL)"
             echo "======================================"
+            # Limpiar cache de config para que tome el search_path actualizado
+            php artisan config:clear
+
             # --- INICIO BLOQUE TEMPORAL (deshabilitar cuando la BD sea estable) ---
-            php artisan db:wipe --force
+            # Eliminar todos los schemas de PostgreSQL (CASCADE borra tablas, FK, etc.)
+            php artisan tinker --execute="
+              \DB::statement('DROP SCHEMA IF EXISTS auditoria CASCADE');
+              \DB::statement('DROP SCHEMA IF EXISTS horario CASCADE');
+              \DB::statement('DROP SCHEMA IF EXISTS notificacion CASCADE');
+              \DB::statement('DROP SCHEMA IF EXISTS mensajeria CASCADE');
+              \DB::statement('DROP SCHEMA IF EXISTS observador CASCADE');
+              \DB::statement('DROP SCHEMA IF EXISTS evaluacion CASCADE');
+              \DB::statement('DROP SCHEMA IF EXISTS inscripcion CASCADE');
+              \DB::statement('DROP SCHEMA IF EXISTS academico CASCADE');
+              \DB::statement('DROP SCHEMA IF EXISTS core CASCADE');
+              \DB::statement('DROP SCHEMA IF EXISTS auth CASCADE');
+              \DB::statement('DROP SCHEMA IF EXISTS ref CASCADE');
+              \DB::statement('DROP SCHEMA IF EXISTS public CASCADE');
+              \DB::statement('CREATE SCHEMA public');
+            "
+            echo "✅ Todos los schemas eliminados"
             php artisan migrate --force --seed
-            echo "✅ db:wipe + migrate --seed ejecutado (BD recreada desde cero)"
+            echo "✅ BD recreada desde cero con migraciones y seeders"
             # --- FIN BLOQUE TEMPORAL ---
 
             # --- INICIO BLOQUE PRODUCCIÓN (descomentar cuando la BD sea estable) ---

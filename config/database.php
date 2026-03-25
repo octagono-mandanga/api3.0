@@ -94,7 +94,7 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => 'public',
+            'search_path' => 'public,ref,auth,core,academico,inscripcion,evaluacion,observador,mensajeria,notificacion,horario,auditoria',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 
