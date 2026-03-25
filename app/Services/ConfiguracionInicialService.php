@@ -22,10 +22,12 @@ use Illuminate\Support\Str;
 class ConfiguracionInicialService
 {
     protected ResendService $resendService;
+    protected InstitucionRolService $rolService;
 
-    public function __construct(ResendService $resendService)
+    public function __construct(ResendService $resendService, InstitucionRolService $rolService)
     {
         $this->resendService = $resendService;
+        $this->rolService = $rolService;
     }
     /**
      * Procesa la configuración inicial completa de una institución.
@@ -37,14 +39,15 @@ class ConfiguracionInicialService
         // Si el email falla no debe revertir los datos ya guardados en BD.
         $resultados = DB::transaction(function () use ($institucion, $datos) {
             $resultados = [
-                'institucion'  => null,
-                'sedes'        => [],
-                'responsable'  => null,
-                'estructura'   => null,
-                'lectivo'      => null,
-                'escala'       => null,
-                'areas'        => [],
-                'email_payload'=> null, // datos para envío posterior al commit
+                'institucion'         => null,
+                'sedes'               => [],
+                'representante_legal' => null,
+                'responsable'         => null,
+                'estructura'          => null,
+                'lectivo'             => null,
+                'escala'              => null,
+                'areas'               => [],
+                'email_payload'       => null,
             ];
 
             // 1. Actualizar datos de la institución
@@ -64,7 +67,12 @@ class ConfiguracionInicialService
                 }
             }
 
-            // 4. Configurar responsable (devuelve payload de email si es usuario nuevo)
+            // 4a. Configurar representante legal (rector)
+            if (!empty($datos['representante_legal'])) {
+                $resultados['representante_legal'] = $this->configurarRepresentanteLegal($institucion, $datos['representante_legal']);
+            }
+
+            // 4b. Configurar responsable/administrador (manager)
             if (!empty($datos['responsable'])) {
                 $resultados['responsable'] = $this->configurarResponsable($institucion, $datos['responsable']);
                 // Guardar payload de email para enviar después del commit
@@ -202,8 +210,44 @@ class ConfiguracionInicialService
     }
 
     /**
-     * Configura el responsable institucional.
+     * Configura el representante legal (rector) de la institución.
      * Busca el usuario por email, si no existe lo crea.
+     * Usa InstitucionRolService para garantizar un solo rector activo.
+     */
+    protected function configurarRepresentanteLegal(Institucion $institucion, array $datos): array
+    {
+        $usuarioData = $datos['usuario'];
+
+        $usuario = Usuario::where('email', $usuarioData['email'])->first();
+
+        if (!$usuario) {
+            $usuario = Usuario::create([
+                'email'            => $usuarioData['email'],
+                'primer_nombre'    => $usuarioData['primer_nombre'],
+                'segundo_nombre'   => $usuarioData['segundo_nombre'] ?? null,
+                'primer_apellido'  => $usuarioData['primer_apellido'],
+                'segundo_apellido' => $usuarioData['segundo_apellido'] ?? null,
+                'tipo_documento_id'=> $usuarioData['tipo_documento_id'] ?? null,
+                'numero_documento' => $usuarioData['numero_documento'] ?? null,
+                'telefono'         => $usuarioData['telefono'] ?? null,
+                'password'         => Hash::make(Str::random(12)),
+                'estado'           => 'activo',
+            ]);
+        }
+
+        // Usar el servicio de roles para asignar como rector (desactiva rector anterior si existe)
+        $resultado = $this->rolService->cambiarRector($institucion, $usuario);
+
+        return [
+            'usuario' => $usuario,
+            'perfil'  => $resultado['perfil'],
+        ];
+    }
+
+    /**
+     * Configura el responsable institucional (administrador/manager).
+     * Busca el usuario por email, si no existe lo crea.
+     * Usa InstitucionRolService para garantizar un solo manager activo.
      * SIEMPRE envía notificación: credenciales para nuevos, aviso para existentes.
      */
     protected function configurarResponsable(Institucion $institucion, array $datos): array
@@ -278,19 +322,14 @@ class ConfiguracionInicialService
             ];
         }
 
-        // Crear o actualizar perfil para el usuario en esta institución
-        $perfil = Perfil::updateOrCreate(
-            [
-                'usuario_id'     => $usuario->id,
-                'institucion_id' => $institucion->id,
-            ],
-            [
-                'rol_id'      => $perfilData['rol_id'] ?? 2,
-                'cargo'       => $perfilData['cargo'],
-                'es_principal'=> $perfilData['es_principal'] ?? true,
-                'estado'      => 'activo',
-            ]
-        );
+        // Usar el servicio de roles para asignar como manager (desactiva manager anterior si existe)
+        $resultado = $this->rolService->cambiarManager($institucion, $usuario);
+        $perfil = $resultado['perfil'];
+
+        // Actualizar cargo en el perfil si fue proporcionado
+        if (!empty($perfilData['cargo'])) {
+            $perfil->update(['cargo' => $perfilData['cargo']]);
+        }
 
         return [
             'usuario'      => $usuario,

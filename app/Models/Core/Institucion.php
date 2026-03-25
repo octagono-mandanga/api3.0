@@ -28,6 +28,7 @@ class Institucion extends Model
         'logo_url',
         'portada_url',
         'rector_id',
+        'manager_id',
         'colores_marca',
         'estado',
     ];
@@ -59,6 +60,11 @@ class Institucion extends Model
     public function rector()
     {
         return $this->belongsTo(\App\Models\Auth\Usuario::class, 'rector_id');
+    }
+
+    public function manager()
+    {
+        return $this->belongsTo(\App\Models\Auth\Usuario::class, 'manager_id');
     }
 
     public function sedes()

@@ -114,7 +114,19 @@ class ConfiguracionInicialController extends Controller
                 'sedes_adicionales.*.direccion' => 'nullable|string|max:255',
                 'sedes_adicionales.*.telefono'  => 'nullable|string|max:20',
 
-                // Responsable
+                // Representante legal (rector)
+                'representante_legal' => 'nullable|array',
+                'representante_legal.usuario' => 'required_with:representante_legal|array',
+                'representante_legal.usuario.email'           => 'required_with:representante_legal.usuario|email',
+                'representante_legal.usuario.primer_nombre'   => 'required_with:representante_legal.usuario|string|max:50',
+                'representante_legal.usuario.segundo_nombre'  => 'nullable|string|max:50',
+                'representante_legal.usuario.primer_apellido' => 'required_with:representante_legal.usuario|string|max:50',
+                'representante_legal.usuario.segundo_apellido'=> 'nullable|string|max:50',
+                'representante_legal.usuario.tipo_documento_id' => 'nullable|integer',
+                'representante_legal.usuario.numero_documento'  => 'nullable|string|max:25',
+                'representante_legal.usuario.telefono'        => 'nullable|string|max:20',
+
+                // Responsable / Administrador (manager)
                 'responsable' => 'nullable|array',
                 'responsable.usuario' => 'required_with:responsable|array',
                 'responsable.usuario.email'           => 'required_with:responsable.usuario|email',
@@ -186,6 +198,7 @@ class ConfiguracionInicialController extends Controller
                     'resumen' => [
                         'institucion_actualizada'  => !is_null($resultados['institucion']),
                         'sedes_creadas'            => count($resultados['sedes']),
+                        'representante_legal_configurado' => !is_null($resultados['representante_legal'] ?? null),
                         'responsable_configurado'  => !is_null($resultados['responsable']),
                         'niveles_configurados'     => count($resultados['estructura']['niveles'] ?? []),
                         'grados_configurados'      => count($resultados['estructura']['grados'] ?? []),

@@ -9,6 +9,7 @@ use App\Http\Middleware\IdentifyInstitution;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ConfiguracionInicialController;
 use App\Http\Controllers\Api\SolicitudActivacionController;
+use App\Http\Controllers\Api\InstitucionRolController;
 use App\Http\Controllers\Api\RefController;
 
 //Root
@@ -21,6 +22,16 @@ use App\Http\Controllers\Api\Root\GradoController;
 use App\Http\Controllers\Api\Root\AreaController;
 use App\Http\Controllers\Api\Root\LectivoController;
 use App\Http\Controllers\Api\Root\AuditoriaController;
+
+//Manager
+use App\Http\Controllers\Api\Manager\InstitucionController as ManagerInstitucionController;
+use App\Http\Controllers\Api\Manager\SedeController as ManagerSedeController;
+use App\Http\Controllers\Api\Manager\NivelController as ManagerNivelController;
+use App\Http\Controllers\Api\Manager\EscalaCalificacionController;
+use App\Http\Controllers\Api\Manager\AreaFormacionController;
+use App\Http\Controllers\Api\Manager\PeriodoController;
+use App\Http\Controllers\Api\Manager\LectivoController as ManagerLectivoController;
+use App\Http\Controllers\Api\Manager\UsuarioController as ManagerUsuarioController;
 
 // Página por defecto de la API
 Route::get('/', function() {
@@ -66,6 +77,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile/update', [ProfileController::class, 'update']);
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
+
+    // Gestión de roles principales de institución (rector y manager)
+    Route::put('/instituciones/{institucion}/rector', [InstitucionRolController::class, 'cambiarRector']);
+    Route::put('/instituciones/{institucion}/manager', [InstitucionRolController::class, 'cambiarManager']);
+    Route::get('/instituciones/{institucion}/roles-principales', [InstitucionRolController::class, 'rolesPrincipales']);
 });
 
 
@@ -117,6 +133,39 @@ Route::middleware(['auth:sanctum'])->prefix('root')->group(function () {
     // Auditoría
     Route::get('auditoria/online-users', [AuditoriaController::class, 'getOnlineUsers']);
     Route::get('auditoria/access-logs', [AuditoriaController::class, 'getAccessLogs']);
+});
+
+// =====================================================
+// MANAGER - Rutas del administrador de institución
+// =====================================================
+Route::middleware(['auth:sanctum'])->prefix('manager')->group(function () {
+    // Institución
+    Route::get('institucion', [ManagerInstitucionController::class, 'show']);
+    Route::put('institucion', [ManagerInstitucionController::class, 'update']);
+
+    // Sedes
+    Route::apiResource('sedes', ManagerSedeController::class);
+
+    // Niveles
+    Route::get('niveles/catalogo', [ManagerNivelController::class, 'catalogo']);
+    Route::apiResource('niveles', ManagerNivelController::class);
+    Route::post('niveles/sync-grados', [ManagerNivelController::class, 'syncGrados']);
+
+    // Escalas de calificación
+    Route::apiResource('escalas', EscalaCalificacionController::class)->except(['destroy']);
+
+    // Áreas de formación
+    Route::get('areas/catalogo', [AreaFormacionController::class, 'catalogo']);
+    Route::apiResource('areas', AreaFormacionController::class);
+
+    // Lectivos (años lectivos)
+    Route::apiResource('lectivos', ManagerLectivoController::class);
+
+    // Periodos
+    Route::apiResource('periodos', PeriodoController::class);
+
+    // Usuarios (coordinadores, secretaria, docentes)
+    Route::apiResource('usuarios', ManagerUsuarioController::class);
 });
 
 // =====================================================

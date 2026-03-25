@@ -47,4 +47,14 @@ class Perfil extends Model
     {
         return $this->belongsTo(\App\Models\Auth\Rol::class, 'rol_id');
     }
+
+    /**
+     * Scope: perfiles activos con un rol específico (por código) en una institución.
+     */
+    public function scopeActivoPorRolCodigo($query, string $institucionId, string $codigoRol)
+    {
+        return $query->where('institucion_id', $institucionId)
+            ->where('estado', 'activo')
+            ->whereHas('rol', fn ($q) => $q->where('codigo', $codigoRol));
+    }
 }

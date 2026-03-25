@@ -102,6 +102,11 @@ class Usuario extends Authenticatable
         return $this->hasMany(\App\Models\Core\Institucion::class, 'rector_id');
     }
 
+    public function institucionesComoManager()
+    {
+        return $this->hasMany(\App\Models\Core\Institucion::class, 'manager_id');
+    }
+
     // Relaciones con inscripcion.*
     public function estudiante()
     {
